@@ -1,8 +1,0 @@
-lib: [
-  "_build/install/default/lib/avl-functional/META"
-  "_build/install/default/lib/avl-functional/dune-package"
-  "_build/install/default/lib/avl-functional/opam"
-]
-bin: [
-  "_build/install/default/bin/avl-functional"
-]

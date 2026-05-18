@@ -32,9 +32,12 @@ let print_avl tree = print_newline (print_string (print_avl_rec tree))
 
 
 let rec find x tree =
-    match x, tree with
-    a, Leaf -> false |
-    a, Node (h, b, left, right) -> a == b || find x left || find x right
+    match tree with
+    Leaf -> false |
+    Node (_, b, left, right) ->
+      if x = b then true
+      else if x < b then find x left
+      else find x right
 
 
 let is_bal tree = match tree with
@@ -65,8 +68,8 @@ let balR tree = match tree with
   Leaf -> tree |
   Node (b, a, left, Leaf) -> tree |
   Node (RH, a, t1, Node (LH, c, t2, t3)) -> rot2 t1 a t2 c t3 |
-  Node (RH, a, t1, Node (RH, c, t2, t3)) -> Node (BAL, a, Node (BAL, c, t1, t2), t3) |
-  Node (RH, a, t1, Node (BAL, c, t2, t3)) -> Node (RH, a, Node (LH, c, t1, t2), t3) |
+  Node (RH, a, t1, Node (RH, c, t2, t3)) -> Node (BAL, c, Node (BAL, a, t1, t2), t3) |
+  Node (RH, a, t1, Node (BAL, c, t2, t3)) -> Node (LH, c, Node (RH, a, t1, t2), t3) |
   Node (BAL, a, t1, t2) -> Node (RH, a, t1, t2) |
   Node (LH, a, t1, t2) -> Node (BAL, a, t1, t2)
   

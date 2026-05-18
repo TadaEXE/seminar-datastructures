@@ -24,6 +24,11 @@
 #include <cmath>       // std::abs
 #include <climits>     // LLONG_MIN, LLONG_MAX
 #include <utility>     // std::pair
+#include <chrono>
+#include <random>
+#include <vector>
+#include <numeric>     // std::iota
+#include <cstdio>
 
 // ------------------------------------------------------------
 // Node: key + stored height + two child pointers.
@@ -391,6 +396,66 @@ void printTree(const Node* t, int indent = 0) {
     printTree(t->left, indent + 4);
 }
 
+// ============================================================
+// Benchmarking
+// ============================================================
+
+using Clock = std::chrono::high_resolution_clock;
+using Ms    = std::chrono::duration<double, std::milli>;
+
+// Measure insert → lookup → delete for a pre-built key vector.
+// The vector is consumed in order for all three phases so the
+// same sequence is used for inserts, lookups, and deletes.
+static void bench(const char* label, std::vector<int> keys) {
+    int n = static_cast<int>(keys.size());
+
+    // ---- insert ----
+    Node* root = nullptr;
+    auto t0 = Clock::now();
+    for (int k : keys)
+        root = insert(k, root);
+    double ins_ms = Ms(Clock::now() - t0).count();
+
+    // ---- lookup ----
+    volatile bool sink = false;   // prevent dead-code elimination
+    t0 = Clock::now();
+    for (int k : keys)
+        sink = isin(k, root);
+    double lkp_ms = Ms(Clock::now() - t0).count();
+    (void)sink;
+
+    // ---- delete ----
+    t0 = Clock::now();
+    for (int k : keys)
+        root = deleteNode(k, root);
+    double del_ms = Ms(Clock::now() - t0).count();
+
+    std::printf("  %-38s  n=%8d  ins=%8.2f ms  lkp=%8.2f ms  del=%8.2f ms\n",
+                label, n, ins_ms, lkp_ms, del_ms);
+    freeTree(root);
+}
+
+static void runBenchmarks() {
+    std::mt19937 rng(42);
+    std::puts("\n=== Benchmarks (C++) ===");
+
+    for (int n : {10'000, 100'000, 1'000'000}) {
+        // sorted (worst case for a plain BST, not for AVL)
+        std::vector<int> sorted(n);
+        std::iota(sorted.begin(), sorted.end(), 0);
+
+        // random permutation of the same keys
+        std::vector<int> random = sorted;
+        std::shuffle(random.begin(), random.end(), rng);
+
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "random");
+        bench(buf, random);
+        std::snprintf(buf, sizeof(buf), "sorted");
+        bench(buf, sorted);
+    }
+}
+
 // small helper for the demo below
 static void demo(const char* label, std::initializer_list<int> keys) {
     std::cout << "\n=== " << label << " ===\n";
@@ -450,5 +515,7 @@ int main() {
     std::cout << "  isin(99): " << (isin(99, root) ? "found" : "not found") << "\n";
 
     freeTree(root);
+
+    runBenchmarks();
     return 0;
 }

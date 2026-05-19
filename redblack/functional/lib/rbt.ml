@@ -93,10 +93,10 @@ let rec split_min tree = match tree with
                 in (x, if get_color l = Black then (baldL l2 a r)
                     else Node(l2, (a, Red), r)))
 
-let rec del x tree = match tree with
+let rec del_replace x tree = match tree with
     | Empty -> Empty
     | Node(l, (a, _), r) -> (match (cmp x a) with
-        | LT -> let l2 = (del x l) in (match (l, get_color l) with
+        | LT -> let l2 = (del_replace x l) in (match (l, get_color l) with
         (* if l != Empty AND color l = Black then bald l2 a r else R l2 a r *)
             | (Node _, Black) 
                 -> baldL l2 a r 
@@ -108,24 +108,59 @@ let rec del x tree = match tree with
             | _ -> let (a2, r2) = (split_min r) in 
                 if get_color r = Black then (baldR l a2 r2)
                 else Node(l, (a2, Red), r2))
-        | GT -> let r2 = (del x r) in (match (r, get_color r) with
+        | GT -> let r2 = (del_replace x r) in (match (r, get_color r) with
         (* if r != Empty AND color r = Black then baldR l a r2 else R l a r2 *)
             | (Node _, Black) -> baldR l a r2
             | _ -> Node(l, (a, Red), r2)))
 
-let delete x tree = paint Black (del x tree)
+let delete x tree = paint Black (del_replace x tree)
 
-(* TODO: deletion-by-joining approach *)
+(* deletion-by-joining approach *)
 
-(*
-let join tree1 tree2 = match (tree1, tree2) with
+let rec join tree1 tree2 = match (tree1, tree2) with
     | (Empty, t) -> t 
     | (t, Empty) -> t
-*)
+    | (Node(t1, (a, Red), t2), Node(t3, (c, Red), t4))
+        -> (match (join t2 t3) with
+            | Node(u2, (b, Red), u3)
+                -> Node(Node(t1, (a, Red), u2), (b, Red), Node(u3, (c, Red), t4))
+            | t23 -> Node(t1, (a, Red), Node(t23, (c, Red), t4)))
+    | (Node(t1, (a, Black), t2), Node(t3, (c, Black), t4))
+        -> (match (join t2 t3) with
+            | Node(u2, (b, Red), u3)
+                -> Node(Node(t1, (a, Black), u2), (b, Red), Node(u3, (c, Black), t4))
+            | t23 -> baldL t1 a (Node(t23, (c, Black), t4)))
+    | (t1, Node(t2, (a, Red), t3))
+        -> Node((join t1 t2), (a, Red), t3)
+    | (Node(t1, (a, Red), t2), t3)
+        -> Node(t1, (a, Red), (join t2 t3))
 
+let rec del_join x tree = match tree with
+    | Empty -> Empty
+    | Node(l, (a, _), r)
+        -> (match (cmp x a) with
+            | LT -> (match (l, get_color l) with
+                | (Node _, Black)
+                    -> (baldL (del_join x l) a r)
+                | _ -> Node((del_join x l), (a, Red), r))
+            | EQ -> join l r
+            | GT -> (match (r, get_color r) with
+                | (Node _, Black)
+                    -> (baldR l a (del_join x r))
+                | _ -> Node(l, (a, Red), (del_join x r))))
+
+let delete_join x tree = paint Black (del_join x tree)
+
+(* LOOKUP *)
+
+let rec lookup tree x = match tree with
+    | Empty -> None
+    | Node(l, (a, _), r) -> (match (cmp x a) with
+        | LT -> lookup l x
+        | EQ -> Some a
+        | GT -> lookup r x)
 
 (* TODO: Invariants for testing *)
-
 
 (* Output functions. Just used to display trees. No logic. *)
 let color_to_string c = match c with

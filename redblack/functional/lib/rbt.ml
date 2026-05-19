@@ -55,6 +55,74 @@ let rec ins x tree = match tree with
 let insert x tree = paint Black (ins x tree)
 
 (* DELETE *)
+(* deletion-by-replacing approach *)
+
+let baldL left mark right = match (left, mark, right) with
+    (* (R t1 a t2) b t3 *)
+    | (Node(t1, (a, Red), t2), b, t3)
+        -> Node(Node(t1, (a, Black), t2), (b, Red), t3)
+    (* t1 a (B t2  t3) *)
+    | (t1, a, Node(t2, (b, Black), t3)) 
+        -> baliR t1 a (Node(t2, (b, Red), t3))
+    (* t1 a (R (B t2 b t3) c t4) *)
+    | (t1, a, Node(Node(t2, (b, Black), t3), (c, Red), t4)) 
+        -> Node(Node(t1, (a, Black), t2), (b, Red), (baliR t3 c (paint Red t4))) 
+    | (t1, a, t2)
+        -> Node(t1, (a, Red), t2) 
+
+let baldR left mark right = match (left, mark, right) with
+    (* t1 a (R t2 b t3) *)
+    | (t1, a, Node(t2, (b, Red), t3))
+        -> Node(t1, (a, Red), Node(t2, (b, Black), t3))
+    (* (B t1 a t2) b t3 *)
+    | (Node(t1, (a, Black), t2), b, t3)
+        -> baliL (Node(t1, (a, Red), t2)) b t3
+    (* (R t1 a (B t2 b t3)) c t4 *)
+    | (Node(t1, (a, Red), Node(t2, (b, Black), t3)), c, t4)
+        -> Node((baliL (paint Red t1) a t2), (b, Red), (Node(t3, (c, Black), t4)))
+    | (t1, a, t2)
+        -> Node(t1, (a, Red), t2)
+
+let rec split_min tree = match tree with
+    | Empty 
+        -> raise (Failure "This function should not be called on a empty tree.")
+    | Node(l, (a, _), r)
+        -> (match l with
+            | Empty -> (a, r)
+            | _ -> let (x, l2) = split_min l
+                in (x, if get_color l = Black then (baldL l2 a r)
+                    else Node(l2, (a, Red), r)))
+
+let rec del x tree = match tree with
+    | Empty -> Empty
+    | Node(l, (a, _), r) -> (match (cmp x a) with
+        | LT -> let l2 = (del x l) in (match (l, get_color l) with
+        (* if l != Empty AND color l = Black then bald l2 a r else R l2 a r *)
+            | (Node _, Black) 
+                -> baldL l2 a r 
+            | _ -> Node(l2, (a, Red), r))
+        | EQ -> (match r with
+        (* if r = Empty then l else let (a2, r2) = split_min r
+           in if color r = Black then baldR l a2 r2 else R l a2 r2 *)
+            | Empty -> l
+            | _ -> let (a2, r2) = (split_min r) in 
+                if get_color r = Black then (baldR l a2 r2)
+                else Node(l, (a2, Red), r2))
+        | GT -> let r2 = (del x r) in (match (r, get_color r) with
+        (* if r != Empty AND color r = Black then baldR l a r2 else R l a r2 *)
+            | (Node _, Black) -> baldR l a r2
+            | _ -> Node(l, (a, Red), r2)))
+
+let delete x tree = paint Black (del x tree)
+
+(* TODO: deletion-by-joining approach *)
+
+(*
+let join tree1 tree2 = match (tree1, tree2) with
+    | (Empty, t) -> t 
+    | (t, Empty) -> t
+*)
+
 
 (* TODO: Invariants for testing *)
 

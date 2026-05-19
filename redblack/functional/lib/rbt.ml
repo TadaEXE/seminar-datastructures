@@ -9,11 +9,6 @@ let get_color tree = match tree with
     | Empty -> Black
     | Node(_, (_, c), _) -> c
 
-(* The following function was only used to try get_color in main.ml *)
-let color_to_string c = match c with
-    | Red -> "Red"
-    | Black -> "Black"
-
 let paint c tree = match tree with
     | Empty -> Empty
     | Node(l, (a, _), r) -> Node(l, (a, c), r)
@@ -38,6 +33,46 @@ let baliR left mark right = match (left, mark, right) with
         -> Node(Node(t1, (a, Black), t2), (b, Red), Node(t3, (c, Black), t4))
     | (t1, a, t2) -> Node(t1, (a, Black), t2)
 
+(* This is done for better readability and to better match the code in the book. *)
+type order = LT | EQ | GT
+
+let cmp x a = let c = compare x a in 
+    if c < 0 then LT 
+    else if c = 0 then EQ
+    else GT
+
+let rec ins x tree = match tree with
+    | Empty -> Node(Empty, (x, Red), Empty)
+    | Node(l, (a, Black), r) -> (match cmp x a with
+        | LT -> baliL (ins x l) a r 
+        | EQ -> Node(l, (a, Black), r)
+        | GT -> baliR l a (ins x r))
+    | Node(l, (a, Red), r) -> (match cmp x a with
+        | LT -> Node((ins x l), (a, Red), r)
+        | EQ -> Node(l, (a, Red), r)
+        | GT -> Node(l, (a, Red), (ins x r)))
+
+let insert x tree = paint Black (ins x tree)
+
 (* DELETE *)
 
 (* TODO: Invariants for testing *)
+
+
+(* Output functions. Just used to display trees. No logic. *)
+let color_to_string c = match c with
+    | Red -> "Red"
+    | Black -> "Black"
+
+let rec tree_to_string tree = match tree with
+    | Empty -> "<>"
+    | Node(l, (a, c), r) -> "Node (" ^ (tree_to_string l) ^ "<" ^ (string_of_int a) ^ "," ^ (color_to_string c) ^ ">" ^ (tree_to_string r) ^ ")"
+
+(* To be able to use this function on trees of any type, a string conversion function 'to_string' needs to be given as well.
+   For example for int rbt use 'to_string' = 'string_of_int'. *)
+let rec tree_to_ascii to_string tree indent = match tree with
+  | Empty -> ()
+  | Node (l, (a, c), r) ->
+      tree_to_ascii (to_string) r (indent ^ "      ");
+      Printf.printf "%s%s(%s)\n" indent (to_string a) (color_to_string c);
+      tree_to_ascii (to_string) l (indent ^ "      ")

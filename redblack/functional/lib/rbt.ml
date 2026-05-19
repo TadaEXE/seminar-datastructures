@@ -160,7 +160,23 @@ let rec lookup tree x = match tree with
         | EQ -> Some a
         | GT -> lookup r x)
 
-(* TODO: Invariants for testing *)
+(* Invariants for testing *)
+
+let rec invc tree = match tree with
+    | Empty -> true
+    | Node(l, (_, c), r)
+        -> (c = Black || ((get_color l = Black) && (get_color r = Black)))
+            && (invc l) && (invc r)
+
+let rec bh tree = match tree with
+    | Empty -> 0
+    | Node(l, (_, c), _) -> if c = Black then (bh l) + 1 else (bh l)
+
+let rec invh tree = match tree with
+    | Empty -> true
+    | Node(l, (_, _), r) -> ((bh l = bh r) && (invh l) && (invh r))
+
+let invrbt tree = (invc tree) && (invh tree) && (get_color tree = Black) 
 
 (* Output functions. Just used to display trees. No logic. *)
 let color_to_string c = match c with

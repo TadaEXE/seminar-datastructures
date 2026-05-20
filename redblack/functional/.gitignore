@@ -1,0 +1,13 @@
+# Dune build artifacts
+_build/
+
+# OCaml editor artifacts
+*.install
+*.merlin
+.merlin
+
+# utop history
+.utop-history
+
+# VS Code
+.vscode/

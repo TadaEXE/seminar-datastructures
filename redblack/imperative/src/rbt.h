@@ -1,5 +1,8 @@
 // This class will implement Red Black trees as described in FDL Nipkow Chapter 8.
 
+#include <iostream>
+#include <string>
+
 #pragma once
 
 enum Color { Red, Black };
@@ -34,6 +37,7 @@ private:
             right->left = t3;
             right->right = t4;
             color = Red;
+            return;
         }
         // L Red and right child of L red. 
         else if (left->color == Red && left->right != nullptr && left->right->color == Red) {
@@ -54,19 +58,68 @@ private:
             right->left = t3;
             right->right = t4;
             color = Red;
+            return;
         }
         // No conflict.
         else {
             color = Black;
+            return;
         }
     }
     void baliR() {
-        return;
+        if (right == nullptr) return;
+
+        // Naming is according to the code in the book.
+
+        // R is Red and right child of R is Red.
+        if (right->color == Red && right->right != nullptr && right->right->color == Red) {
+            rbt<T>* t1 = left;
+            rbt<T>* t2 = right->left;
+            rbt<T>* new_right = right->right;
+
+            T a = mark;
+            T b = right->mark;
+
+            mark = b;
+            left = new rbt<T>(a, Black);
+            left->left = t1;
+            left->right = t2;
+            right = new_right;
+            right->color = Black;
+            color = Red;
+            return;
+        }
+        // R is Red and left child of R is Red.
+        else if (right->color == Red && right->left != nullptr && right->left->color == Red)  {
+            rbt<T>* t1 = left;
+            rbt<T>* t2 = right->left->left;
+            rbt<T>* t3 = right->left->right;
+            rbt<T>* t4 = right->right;
+
+            T a = mark;
+            T b = right->left->mark;
+            T c = right->mark;
+
+            mark = b;
+            left = new rbt<T>(a, Black);
+            left->left = t1;
+            left->right = t2;
+            right = new rbt<T>(c, Black);
+            right->left = t3;
+            right->right = t4;
+            color = Red;
+            return;
+        }
+        // No conflict.
+        else {
+            color = Black;
+            return;
+        }
     }
 
     // This is heavily inspired by the pseudo code of insert in the book.
     void ins(T x) {
-        if (color = Black) {
+        if (color == Black) {
             if (x < mark) {
                 // Check if child is a real tree.
                 if (left != nullptr) {
@@ -134,7 +187,6 @@ public:
         color = Black;
         return;
     }
-
 
     void delete_node(T x) {
         return;

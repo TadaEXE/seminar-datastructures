@@ -1,3 +1,4 @@
-(test
- (name test_avl_functional)
- (libraries avl_functional))
+(executable
+ (name test)
+ (libraries ounit2 avl_functional)
+ (preprocess (pps ppx_inline_test)))

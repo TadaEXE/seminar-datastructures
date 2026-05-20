@@ -15,6 +15,19 @@ let rec avl_inv tree =
   Node (BAL, _, left, right) -> ht left = ht right && avl_inv left && avl_inv right |
   Node (RH, _, left, right) -> ht left + 1 = ht right && avl_inv left && avl_inv right
 
+let rec search_tree_inv tree = match tree with
+  Node (_, b, left, right) -> search_tree_inv left && search_tree_inv right &&
+    (match left with 
+      Node (_, a, _, _) -> a < b |
+      Leaf -> true) &&
+    (match right with 
+      Node (_, c, _, _) -> b < c |
+      Leaf -> true) |
+    Leaf -> true
+
+let rec size tree = match tree with 
+  Leaf -> 0 |
+  Node (_, _, left, right) -> size left + size right + 1 
 
 let rec print_avl_rec tree = match tree with 
   Leaf -> "<>" |
@@ -55,8 +68,12 @@ let rot2 t1 a t2 c t3 = match t2 with
   Leaf -> Leaf 
 
 let balL tree = match tree with
+  (* This case should be impossible *)
   Leaf -> tree |
-  Node (b, a, Leaf, right) -> tree |
+  (* This case is  not considered in the paper but is possible *)
+  Node (b, a, Leaf, Leaf) -> Node (BAL, a, Leaf, Leaf) |
+  (* This case should not be possible, but if it is a valid AVL tree, it has to be RH *)
+  Node (b, a, Leaf, right) -> Node (RH, a, Leaf, right) |
   Node (LH, c, Node (RH, a, t1, t2), t3) -> rot2 t1 a t2 c t3 |
   Node (LH, c, Node (LH, a, t1, t2), t3) -> Node (BAL, a, t1, Node (BAL, c, t2, t3)) |
   Node (LH, c, Node (BAL, a, t1, t2), t3) -> Node (RH, a, t1, Node (LH, c, t2, t3)) |
@@ -65,8 +82,12 @@ let balL tree = match tree with
 
 
 let balR tree = match tree with
+  (* This case should be impossible *)
   Leaf -> tree |
-  Node (b, a, left, Leaf) -> tree |
+  (* This case is  not considered in the paper but is possible *)
+  Node (b, a, Leaf, Leaf) -> Node (BAL, a, Leaf, Leaf) |
+  (* This case should not be possible, but if it is a valid AVL tree, it has to be LH *)
+  Node (b, a, left, Leaf) -> Node (LH, a, left, Leaf) |
   Node (RH, a, t1, Node (LH, c, t2, t3)) -> rot2 t1 a t2 c t3 |
   Node (RH, a, t1, Node (RH, c, t2, t3)) -> Node (BAL, c, Node (BAL, a, t1, t2), t3) |
   Node (RH, a, t1, Node (BAL, c, t2, t3)) -> Node (LH, c, Node (RH, a, t1, t2), t3) |
@@ -93,6 +114,7 @@ let decr old changed = match old with
   old -> incr changed old
 
 let rec split_max tree = match tree with
+  (* This case can never appear but forces the type 'a to int. What to do? *)
   Leaf -> (Leaf, 0) |
   Node (bl, a, left, Leaf) -> (left, a) |
   Node (bl, a, left, right) -> 

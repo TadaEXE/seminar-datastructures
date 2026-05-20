@@ -1,4 +1,5 @@
 (executable
  (public_name avl-functional)
  (name main)
- (libraries avl_functional))
+ (libraries avl_functional benchmark))
+

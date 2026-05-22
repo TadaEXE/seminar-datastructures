@@ -30,19 +30,37 @@ def generateTest(n):
             commands += [f'f{x}']
     return [commands]
 
-def generateBenchmarkSimple(n):
-    items = np.array(range(n))
-    random.shuffle(items)
-    converted = "i" + items.astype("str")
+def benchmarksInsert(n, step, added):
+    block = []
+    for t in range(10000):
+        x = random.randint(0, (n + 1) * step)
+        block += [f"i{x}"]
+        added.add(x)
+    return block
+
+def benchmarksDelete(n, step, added):
+    block = []
+    for t in range(10000):
+        x = random.randint(step, n * step + len(added) - 1)
+        if x <= n * step:
+            block += [f"d{x}"]
+        else:
+            elem = list(added)[x - n * step]
+            block += [f"d{elem}"]
+            added.remove(elem)
+    return block
+
+
+def benchmarksForTree(n, step, order):
     commands = []
-    for t in range (n // 10000):
-        block = converted[t*10000 : (t + 1) * 10000]
-        commands += [block]
-    random.shuffle(items)
-    converted = "d" + items.astype("str")
-    for t in range (n // 10000):
-        block = converted[t*10000 : (t + 1) * 10000]
-        commands += [block]
+    added = set({})
+    for i in range (10):
+        if order:
+            commands += [benchmarksInsert(n, step, added)]
+            commands += [benchmarksDelete(n, step, added)]
+        else:
+            commands += [benchmarksInsert(n, step, added)]
+            commands += [benchmarksDelete(n, step, added)]
     return commands
 
 def print_data(commands, path):
@@ -52,4 +70,4 @@ def print_data(commands, path):
         f.write(block_sequence + "\n")
     f.close()
 
-print_data(generateBenchmarkSimple(10000), "data/benchmark_10000.txt")
+print_data(benchmarksForTree(24157816, 64, True), "data/benchmark_insert.txt")

@@ -3,64 +3,89 @@
 #include <cassert>
 
 int main() {
-    Node* root = nullptr;
+    Node* root = nullptr; // start with an empty tree
 
     // --- insert tests ---
 
-    // ascending insert: triggers RR rotations
-    root = insert(root, 10); assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = insert(root, 20); assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = insert(root, 30); assert(avl_inv(root)); assert(search_tree_inv(root)); // RR
-    root = insert(root, 40); assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = insert(root, 50); assert(avl_inv(root)); assert(search_tree_inv(root)); // RR
-    root = insert(root, 25); assert(avl_inv(root)); assert(search_tree_inv(root)); // RL
-    root = insert(root, 5);  assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = insert(root, 3);  assert(avl_inv(root)); assert(search_tree_inv(root)); // LL
-    root = insert(root, 7);  assert(avl_inv(root)); assert(search_tree_inv(root)); // LR
+    // insert some values
+    root = insert(root, 10);
+    root = insert(root, 20);
+    root = insert(root, 30); // this should need a rotation
 
-    // duplicate insert should be a no-op
-    root = insert(root, 25); assert(avl_inv(root)); assert(search_tree_inv(root));
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
 
-    std::cout << "inorder: ";
+    root = insert(root, 40);
+    root = insert(root, 50);
+    root = insert(root, 25); // more rotations can happen here
+
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
+
+    root = insert(root, 5);
+    root = insert(root, 3);
+    root = insert(root, 7);
+
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
+
+    // inserting an existing value should not change the tree
+    root = insert(root, 25);
+
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
+
+    std::cout << "Tree after insertions: ";
     inorder(root);
     std::cout << "\n";
 
-    // --- search tests ---
+    // search test for existing and non-existing values
     assert(search(root, 25));
     assert(search(root, 3));
     assert(!search(root, 99));
     assert(!search(root, 0));
-    std::cout << "search ok\n";
 
-    // --- delete tests ---
+    std::cout << "Search tests passed\n";
 
-    // delete a leaf
-    root = deleteNode(root, 3);  assert(avl_inv(root)); assert(search_tree_inv(root));
-    // delete a node with one child
-    root = deleteNode(root, 5);  assert(avl_inv(root)); assert(search_tree_inv(root));
-    // delete a node with two children
-    root = deleteNode(root, 20); assert(avl_inv(root)); assert(search_tree_inv(root));
-    // delete root
-    root = deleteNode(root, 30); assert(avl_inv(root)); assert(search_tree_inv(root));
-    // delete non-existent (should be a no-op)
-    root = deleteNode(root, 99); assert(avl_inv(root)); assert(search_tree_inv(root));
+    // delete tests
+    // delete some values
+    root = deleteNode(root, 3);
+    root = deleteNode(root, 5);
 
-    std::cout << "after some deletes: ";
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
+
+    root = deleteNode(root, 20);
+    root = deleteNode(root, 30);
+
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
+
+    // deleting a value which is not in the tree should not break anything
+    root = deleteNode(root, 99);
+
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
+
+    std::cout << "Tree after some deletions: ";
     inorder(root);
     std::cout << "\n";
 
-    // delete all remaining elements
-    root = deleteNode(root, 7);  assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = deleteNode(root, 10); assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = deleteNode(root, 25); assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = deleteNode(root, 40); assert(avl_inv(root)); assert(search_tree_inv(root));
-    root = deleteNode(root, 50); assert(avl_inv(root)); assert(search_tree_inv(root));
+    // delete the remaining values
+    root = deleteNode(root, 7);
+    root = deleteNode(root, 10);
+    root = deleteNode(root, 25);
+    root = deleteNode(root, 40);
+    root = deleteNode(root, 50);
 
-    // tree should be empty now
+    assert(avl_inv(root));
+    assert(search_tree_inv(root));
+
+    // now the tree should be empty
     assert(root == nullptr);
-    std::cout << "tree empty ok\n";
 
-    std::cout << "all invariants ok\n";
+    std::cout << "Tree is empty now\n";
+    std::cout << "All tests passed\n";
 
     freeTree(root);
     return 0;

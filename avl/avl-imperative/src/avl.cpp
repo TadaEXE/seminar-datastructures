@@ -7,16 +7,20 @@ int height(Node* n) {
     return n->height;
 }
 
+// Height = 1 + max(left or right subtree heights)
 void updateHeight(Node* n) {
+    if (n == nullptr) return;
     n->height = 1 + std::max(height(n->left), height(n->right));
 }
 
-// left side grew too tall, rebalance
+// left side grew too tall, rebalance by rotating right
 // LL: single rotation, LR: double rotation
+// balance factor = height(left) - height(right), if > 1 then left is too tall
 Node* balL(Node* z) {
     Node* left  = z->left;
     Node* right = z->right;
 
+    // if balance is not violated, just update height and return
     if (height(left) != height(right) + 2) {
         updateHeight(z);
         return z;
@@ -26,14 +30,14 @@ Node* balL(Node* z) {
     Node* leftRight = left->right;
 
     if (height(leftRight) <= height(leftLeft)) {
-        // LL: saga donus
+        // LL-Fall: einfache Rechtsrotation
         left->right = z;
         z->left     = leftRight;
         updateHeight(z);
         updateHeight(left);
         return left;
     } else {
-        // LR: once sola sonra saga donus
+        // LR-Fall: Linksrotation, danach Rechtsrotation
         Node* lrLeft  = leftRight->left;
         Node* lrRight = leftRight->right;
 
@@ -87,7 +91,9 @@ Node* balR(Node* z) {
     }
 }
 
-// standard BST search
+// search for a key in the tree, standard binary search tree search
+// if found return true, if not found return false
+// if key is less than current node, go left, if greater go right
 bool search(Node* n, int key) {
     if (n == nullptr) return false;
     if (key == n->key) return true;
@@ -110,6 +116,11 @@ Node* insert(Node* n, int key) {
 }
 
 // remove and return the max element, right side shrinks so call balL
+// used in deleteNode when we need to find the in-order predecessor
+// (max of left subtree)
+// if right child is null, then current node is max, return left child as remaining tree
+// else go right and keep looking for max, then balL to fix the tree
+// returns pair of (remaining tree after removing max, max key)
 std::pair<Node*, int> split_max(Node* t) {
     if (t->right == nullptr) {
         int maxKey = t->key;

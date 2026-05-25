@@ -3,11 +3,12 @@
 #include <climits>
 
 struct Node {
-    int key;
+    int key;    // the value of the node
     int height;
     Node* left;
     Node* right;
 
+    // for new nodes, height is 1 and children are null
     Node(int k) : key(k), height(1), left(nullptr), right(nullptr) {}
 };
 

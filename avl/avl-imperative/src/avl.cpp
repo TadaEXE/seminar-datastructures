@@ -164,13 +164,23 @@ void freeTree(Node* n) {
     delete n;
 }
 
-// checks that the height difference between left and right is at most 1
+// checks that:
+// 1. the stored height is actually correct
+// 2. the height difference between left and right is at most 1
 // same as avl_inv in the ocaml version
 bool avl_inv(Node* n) {
     if (n == nullptr) return true;
-    int diff = height(n->left) - height(n->right);
-    if (diff < -1 || diff > 1) return false;
-    return avl_inv(n->left) && avl_inv(n->right);
+    if (!avl_inv(n->left) || !avl_inv(n->right)) return false;
+
+    int lh = height(n->left);
+    int rh = height(n->right);
+
+    // check that the stored height matches the actual height
+    if (n->height != 1 + std::max(lh, rh)) return false;
+
+    // check balance
+    int diff = lh - rh;
+    return diff >= -1 && diff <= 1;
 }
 
 // checks that for every node, left child < node < right child

@@ -175,7 +175,7 @@ bool avl_inv(Node* n) {
 
 // checks that for every node, left child < node < right child
 // same as search_tree_inv in the ocaml version
-bool search_tree_inv(Node* n, int min, int max) {
+bool search_tree_inv(Node* n, long long min, long long max) {
     if (n == nullptr) return true;
     if (n->key <= min || n->key >= max) return false;
     return search_tree_inv(n->left, min, n->key)

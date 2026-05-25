@@ -1,5 +1,6 @@
 #pragma once
 #include <utility>
+#include <climits>
 
 struct Node {
     int key;
@@ -27,4 +28,4 @@ void freeTree(Node* n);
 
 // invariant checks
 bool avl_inv(Node* n);
-bool search_tree_inv(Node* n, int min = -1000000, int max = 1000000);
+bool search_tree_inv(Node* n, long long min = LLONG_MIN, long long max = LLONG_MAX);

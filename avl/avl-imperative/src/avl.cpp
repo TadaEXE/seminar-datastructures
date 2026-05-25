@@ -11,83 +11,83 @@ void updateHeight(Node* n) {
     n->height = 1 + std::max(height(n->left), height(n->right));
 }
 
-// balL: called when the left child may have grown too tall (Chapter 9, Figure 9.1)
-// two cases: LL (single rotation) and LR (double rotation)
+// left side grew too tall, rebalance
+// LL: single rotation, LR: double rotation
 Node* balL(Node* z) {
-    Node* AB = z->left;
-    Node* C  = z->right;
+    Node* left  = z->left;
+    Node* right = z->right;
 
-    if (height(AB) != height(C) + 2) {
+    if (height(left) != height(right) + 2) {
         updateHeight(z);
         return z;
     }
 
-    Node* A = AB->left;
-    Node* B = AB->right;
+    Node* leftLeft  = left->left;
+    Node* leftRight = left->right;
 
-    if (height(B) <= height(A)) {
-        // LL case - single right rotation
-        AB->right = z;
-        z->left   = B;
+    if (height(leftRight) <= height(leftLeft)) {
+        // LL: saga donus
+        left->right = z;
+        z->left     = leftRight;
         updateHeight(z);
-        updateHeight(AB);
-        return AB;
+        updateHeight(left);
+        return left;
     } else {
-        // LR case - double rotation
-        // B cant be null here since height(B) > height(A) >= 0
-        Node* B1 = B->left;
-        Node* B2 = B->right;
+        // LR: once sola sonra saga donus
+        Node* lrLeft  = leftRight->left;
+        Node* lrRight = leftRight->right;
 
-        AB->right = B1;
-        z->left   = B2;
-        B->left   = AB;
-        B->right  = z;
+        left->right      = lrLeft;
+        z->left          = lrRight;
+        leftRight->left  = left;
+        leftRight->right = z;
 
-        updateHeight(AB);
+        updateHeight(left);
         updateHeight(z);
-        updateHeight(B);
-        return B;
+        updateHeight(leftRight);
+        return leftRight;
     }
 }
 
-// balR: mirror of balL, called when right child may be too tall (Figure 9.2)
+// right side grew too tall, mirror of balL
+// RR: single rotation, RL: double rotation
 Node* balR(Node* z) {
-    Node* A  = z->left;
-    Node* BC = z->right;
+    Node* left  = z->left;
+    Node* right = z->right;
 
-    if (height(BC) != height(A) + 2) {
+    if (height(right) != height(left) + 2) {
         updateHeight(z);
         return z;
     }
 
-    Node* B = BC->left;
-    Node* C = BC->right;
+    Node* rightLeft  = right->left;
+    Node* rightRight = right->right;
 
-    if (height(B) <= height(C)) {
-        // RR case - single left rotation
-        BC->left = z;
-        z->right = B;
+    if (height(rightLeft) <= height(rightRight)) {
+        // RR: sola donus
+        right->left = z;
+        z->right    = rightLeft;
         updateHeight(z);
-        updateHeight(BC);
-        return BC;
+        updateHeight(right);
+        return right;
     } else {
-        // RL case - double rotation
-        Node* B1 = B->left;
-        Node* B2 = B->right;
+        // RL: once saga sonra sola donus
+        Node* rlLeft  = rightLeft->left;
+        Node* rlRight = rightLeft->right;
 
-        z->right = B1;
-        BC->left = B2;
-        B->left  = z;
-        B->right = BC;
+        z->right         = rlLeft;
+        right->left      = rlRight;
+        rightLeft->left  = z;
+        rightLeft->right = right;
 
         updateHeight(z);
-        updateHeight(BC);
-        updateHeight(B);
-        return B;
+        updateHeight(right);
+        updateHeight(rightLeft);
+        return rightLeft;
     }
 }
 
-// standard BST lookup
+// standard BST search
 bool search(Node* n, int key) {
     if (n == nullptr) return false;
     if (key == n->key) return true;
@@ -95,7 +95,7 @@ bool search(Node* n, int key) {
     return search(n->right, key);
 }
 
-// insert: after going left call balL, after going right call balR (Section 9.2.1)
+// go left -> balL, go right -> balR
 Node* insert(Node* n, int key) {
     if (n == nullptr) return new Node(key);
 
@@ -109,8 +109,7 @@ Node* insert(Node* n, int key) {
     return n; // already exists
 }
 
-// split_max: removes and returns the largest element from subtree t (Figure 9.3)
-// after removing from the right side, left might be relatively taller so we call balL
+// remove and return the max element, right side shrinks so call balL
 std::pair<Node*, int> split_max(Node* t) {
     if (t->right == nullptr) {
         int maxKey = t->key;
@@ -123,8 +122,7 @@ std::pair<Node*, int> split_max(Node* t) {
     return {balL(t), maxKey};
 }
 
-// delete: after going left call balR (left shrank), after going right call balL (right shrank)
-// key insight from Section 9.2.2: balL and balR are reused here, same as insert
+// opposite of insert: left shrinks -> balR, right shrinks -> balL
 Node* deleteNode(Node* n, int key) {
     if (n == nullptr) return nullptr;
 
@@ -164,10 +162,7 @@ void freeTree(Node* n) {
     delete n;
 }
 
-// checks that:
-// 1. the stored height is actually correct
-// 2. the height difference between left and right is at most 1
-// same as avl_inv in the ocaml version
+// check stored height is correct and balance difference is at most 1
 bool avl_inv(Node* n) {
     if (n == nullptr) return true;
     if (!avl_inv(n->left) || !avl_inv(n->right)) return false;
@@ -183,8 +178,7 @@ bool avl_inv(Node* n) {
     return diff >= -1 && diff <= 1;
 }
 
-// checks that for every node, left child < node < right child
-// same as search_tree_inv in the ocaml version
+// check that every key is within the valid range for its position in the tree
 bool search_tree_inv(Node* n, long long min, long long max) {
     if (n == nullptr) return true;
     if (n->key <= min || n->key >= max) return false;

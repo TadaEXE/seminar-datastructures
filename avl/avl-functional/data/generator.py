@@ -54,7 +54,7 @@ def benchmarksDelete(n, step, added):
 def benchmarksForTree(n, step, order):
     commands = []
     added = set({})
-    for i in range (10):
+    for i in range (5):
         if order:
             commands += [benchmarksInsert(n, step, added)]
             commands += [benchmarksDelete(n, step, added)]
@@ -71,6 +71,10 @@ def print_data(commands, path):
     f.close()
 
 #print_data(benchmarksForTree(28656, 64, True), "data/benchmark_15.txt")
-print_data(benchmarksForTree(14930351, 64, True), "data/benchmark_24.txt")
+#print_data(benchmarksForTree(14930351, 64, True), "data/benchmark_24.txt")
 #print_data(benchmarksForTree(832039, 64, True), "data/benchmark_20.txt")
 #print_data(benchmarksForTree(24157816, 64, True), "data/benchmark_insert.txt")
+
+for t in range(15, 26):
+    print(f"({t}, \"data/range_{pow(2, t) - 1}.txt\");")
+    print_data(benchmarksForTree(pow(2, t) - 1, 64, True), f"data/range_{pow(2, t) - 1}.txt")

@@ -70,4 +70,7 @@ def print_data(commands, path):
         f.write(block_sequence + "\n")
     f.close()
 
-print_data(benchmarksForTree(24157816, 64, True), "data/benchmark_insert.txt")
+#print_data(benchmarksForTree(28656, 64, True), "data/benchmark_15.txt")
+print_data(benchmarksForTree(14930351, 64, True), "data/benchmark_24.txt")
+#print_data(benchmarksForTree(832039, 64, True), "data/benchmark_20.txt")
+#print_data(benchmarksForTree(24157816, 64, True), "data/benchmark_insert.txt")

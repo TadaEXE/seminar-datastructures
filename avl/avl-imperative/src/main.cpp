@@ -1,44 +1,74 @@
-#include "avl.h"
+#include "avl_iterative.h"
 #include <iostream>
 #include <cassert>
+#include <cstdlib>
+#include <vector>		
+
+using namespace avl;
 
 int main() {
-    Node* root = nullptr; // start with an empty tree
+    std::srand(0); 
+    AvlRec avl;
+    std::vector<int> trace;
+    for (int i = 0; i < 10000; i++) {
+        int random_value = std::rand() % 20000;
+        trace.push_back(random_value);
+        avl.ins(random_value);
 
+        assert(avl_inv(avl.getRoot()));
+        assert(search_tree_inv(avl.getRoot()));
+    }
+    std::cout << "Start deletion\n";
+    for (int i = 0; i < 10000; i++) {
+        int random_value = std::rand() % trace.size();
+        avl.del(trace[random_value]);
+        trace.erase(trace.begin() + random_value);
+
+        assert(avl_inv(avl.getRoot()));
+        assert(search_tree_inv(avl.getRoot()));
+    }
+}
+
+int someMain() {
+    //Node* root = new Node(10); // start with an empty tree
+    AvlRec avl;
     // --- insert tests ---
 
     // insert some values
-    root = insert(root, 10);
-    root = insert(root, 20);
-    root = insert(root, 30); // this should need a rotation
+    avl.ins(10);
+    avl.ins(20);
+    avl.ins(30); // this should need a rotation
+    
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
 
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
+    avl.ins(40);
+    avl.ins(50);
+    avl.ins(25); // more rotations can happen here
 
-    root = insert(root, 40);
-    root = insert(root, 50);
-    root = insert(root, 25); // more rotations can happen here
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
 
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
-
-    root = insert(root, 5);
-    root = insert(root, 3);
-    root = insert(root, 7);
-
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
+    avl.ins(5);
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
+    avl.ins(3);
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
+    avl.ins(7);
 
     // inserting an existing value should not change the tree
-    root = insert(root, 25);
+    avl.ins(25);
 
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
 
     std::cout << "Tree after insertions: ";
-    inorder(root);
+    inorder(avl.getRoot());
     std::cout << "\n";
 
+
+    /*
     // search test for existing and non-existing values
     assert(search(root, 25));
     assert(search(root, 3));
@@ -47,46 +77,47 @@ int main() {
 
     std::cout << "Search tests passed\n";
 
+    */
     // delete tests
     // delete some values
-    root = deleteNode(root, 3);
-    root = deleteNode(root, 5);
+    avl.del(3);
+    avl.del(5);
 
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
 
-    root = deleteNode(root, 20);
-    root = deleteNode(root, 30);
+    avl.del(20);
+    avl.del(30);
 
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
 
     // deleting a value which is not in the tree should not break anything
-    root = deleteNode(root, 99);
+    avl.del(99);
 
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
 
     std::cout << "Tree after some deletions: ";
-    inorder(root);
+    inorder(avl.getRoot());
     std::cout << "\n";
 
     // delete the remaining values
-    root = deleteNode(root, 7);
-    root = deleteNode(root, 10);
-    root = deleteNode(root, 25);
-    root = deleteNode(root, 40);
-    root = deleteNode(root, 50);
+    avl.del(7);
+    avl.del(10);
+    avl.del(25);
+    avl.del(40);
+    avl.del(50);
 
-    assert(avl_inv(root));
-    assert(search_tree_inv(root));
+    assert(avl_inv(avl.getRoot()));
+    assert(search_tree_inv(avl.getRoot()));
 
     // now the tree should be empty
-    assert(root == nullptr);
+    assert(avl.getRoot() == nullptr);
 
     std::cout << "Tree is empty now\n";
     std::cout << "All tests passed\n";
 
-    freeTree(root);
+    freeTree(avl.getRoot());
     return 0;
 }

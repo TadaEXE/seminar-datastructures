@@ -180,9 +180,11 @@ bool avl_inv(Node* n) {
 
     int lh = height(n->left);
     int rh = height(n->right);
-
     // check that the stored height matches the actual height
-    if (n->height != 1 + std::max(lh, rh)) return false;
+    if (n->height != 1 + std::max(lh, rh)) {
+        std::cout << "Height: " << n->key << "\n";
+        return false;
+    }
 
     // check balance
     int diff = lh - rh;

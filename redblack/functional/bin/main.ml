@@ -22,7 +22,8 @@ let rec wc_rbt_const min step bh = match bh with
     let r = Node(rl, (mrl, Red), rr) in
     (Node(l, (ml, Black), r), mrr)
 
-let wc_rbt step bh = let (tree, max) = wc_rbt_const step step bh in tree
+(* Black height will be approx. depth / 2, because of alternating red-black nodes. *)
+let wc_rbt step depth = let (tree, max) = wc_rbt_const step step (depth / 2) in tree
 
 let rec unbalanced_tree a depth = 
   if depth <= 0 then Empty 
@@ -66,7 +67,6 @@ let benchmark_balanced n path oc =
   print_result ("Balanced_" ^ string_of_int n) res oc
   
 
-
 (* here not unbalanced but worst case *)
 let benchmark_unbalanced n path oc =  
     let tree2 = wc_rbt 64 n in
@@ -94,10 +94,10 @@ let unbalanced_benchmarks = [|
   (28, "./data/benchmark_20.txt");
   (34, "./data/benchmark_24.txt")|]
 
-(*let benchmark_all = let oc = open_out "./data/results_long1.txt" in
+(* TODO: here unbalanced did not work: 'Fatal error: exception Sys_error("./data/benchmark_15.txt: No such file or directory")'*)
+let benchmark_all = let oc = open_out "./data/results_long1.txt" in
   let _= Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks in
-  Array.iter (fun (n, path) -> benchmark_unbalanced n path oc) unbalanced_benchmarks*)
-
+  Array.iter (fun (n, path) -> benchmark_unbalanced n path oc) unbalanced_benchmarks
 
 (*let benchmark_bal = let oc = open_out "./data/results_balanced.txt" in
   Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks*)
@@ -141,8 +141,7 @@ let benchmark_wb = let oc = open_out "./data/results_comp.txt" in
   let d_worst = Array.map (fun n -> (benchmark_rep n 5 (fun tree -> max tree), n)) comp_n in
   let _ = Array.iter (fun (dat, n) -> print_result ("d_worst" ^ (string_of_int n)) dat oc) d_worst in 
   ()
-  *)
-
+*)
 
 (* OLD STUFF *)
 let exmpl = insert 12 (insert 1 (insert 10 (insert 6 (insert 3 (Node(Empty, (5, Red), Empty))))))
@@ -152,9 +151,6 @@ let del_exmpl_str = delete "Hello" exmpl_str
 
 (* MAIN *)
 let () = 
-    (*Printf.printf "Tree: %s\n" (tree_to_string exmpl)*)
-
-
     (*
     Printf.printf "<------- Before Deletion ------->\n";
     tree_to_ascii (string_of_int) exmpl "";
@@ -179,6 +175,12 @@ let () =
     Printf.printf "Constructed correct tree of bh 5: %s \n" (string_of_bool (invrbt (wc_rbt 2 5)));
     Printf.printf "Constructed correct tree of bh 10: %s \n" (string_of_bool (invrbt (wc_rbt 2 10)));
     Printf.printf "Constructed correct tree of bh 15: %s \n" (string_of_bool (invrbt (wc_rbt 2 15)));
-    tree_to_ascii (string_of_int) (wc_rbt 2 5) "";
 
-    (*run_benchmarks ()*)
+    (* CORRECTNESS OF BALANCED_TREES CONSTRUCTION *)
+    Printf.printf "<------- Balanced trees ------->\n";
+    let bt = balanced_tree 2 2 4 in
+    tree_to_ascii (string_of_int) (bt) "";
+    Printf.printf "Constructed correct tree: %s \n" (string_of_bool (invrbt bt));
+    Printf.printf "<------- Balanced trees + delete ------->\n";
+    tree_to_ascii (string_of_int) (delete 6 bt) "";
+    Printf.printf "Constructed correct tree: %s \n" (string_of_bool (invrbt (delete 6 bt)));

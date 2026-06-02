@@ -8,7 +8,7 @@
 
 using namespace avl;
 
-Node* balL1(Node* current) {
+Node* AvlRec::balL1(Node* current) {
     //std::cout << HEIGHT(current) << ", " << HEIGHT(current->left) << ", " << HEIGHT(current->right) << ", " << HEIGHT(current->left->left) << ", " << HEIGHT(current->left->right) << "\n";
     Node* left = current->left;
     int heightB = HEIGHT(left->right);
@@ -20,7 +20,7 @@ Node* balL1(Node* current) {
     return left;
 }
 
-Node* balL2(Node* current) {
+Node* AvlRec::balL2(Node* current) {
     Node* left = current->left;
     Node* treeB = current->left->right;
     left->right = treeB->left;
@@ -33,7 +33,7 @@ Node* balL2(Node* current) {
     return treeB;
 }
 
-Node* balR1(Node* current) {
+Node* AvlRec::balR1(Node* current) {
     Node* right = current->right;
     int heightB = HEIGHT(right->left);
     current->right = right->left;
@@ -43,7 +43,7 @@ Node* balR1(Node* current) {
     return right;
 }
 
-Node* balR2(Node* current) {
+Node* AvlRec::balR2(Node* current) {
     Node* right = current->right;
     Node* treeB = current->right->left;
     right->left = treeB->right;

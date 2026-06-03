@@ -1,0 +1,96 @@
+insert best case...
+  n=15
+  n=16
+  n=17
+  n=18
+  n=19
+  n=20
+  n=21
+  n=22
+  n=23
+  n=24
+  n=25
+  n=26
+  n=27
+  n=28
+  n=29
+  n=30
+  n=31
+  n=32
+  n=33
+  n=34
+insert worst case...
+  n=15
+  n=16
+  n=17
+  n=18
+  n=19
+  n=20
+  n=21
+  n=22
+  n=23
+  n=24
+  n=25
+  n=26
+  n=27
+  n=28
+  n=29
+  n=30
+  n=31
+  n=32
+  n=33
+  n=34
+delete best case...
+  n=15
+  n=16
+  n=17
+  n=18
+  n=19
+  n=20
+  n=21
+  n=22
+  n=23
+  n=24
+  n=25
+  n=26
+  n=27
+  n=28
+  n=29
+  n=30
+  n=31
+  n=32
+  n=33
+  n=34
+delete worst case...
+  n=15
+  n=16
+  n=17
+  n=18
+  n=19
+  n=20
+  n=21
+  n=22
+  n=23
+  n=24
+  n=25
+  n=26
+  n=27
+  n=28
+  n=29
+  n=30
+  n=31
+  n=32
+  n=33
+  n=34
+mixed workload depth 15...
+mixed workload depth 16...
+mixed workload depth 17...
+mixed workload depth 18...
+mixed workload depth 19...
+mixed workload depth 20...
+mixed workload depth 21...
+mixed workload depth 22...
+mixed workload depth 23...
+mixed workload depth 24...
+mixed workload depth 25...
+done! results in results_comp_cpp.txt and results_mixed_cpp.txt

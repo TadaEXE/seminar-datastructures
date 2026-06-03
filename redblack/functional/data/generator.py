@@ -75,6 +75,6 @@ def print_data(commands, path):
 #print_data(benchmarksForTree(832039, 64, True), "data/benchmark_20.txt")
 #print_data(benchmarksForTree(24157816, 64, True), "data/benchmark_insert.txt")
 
-for t in range(15, 26):
+for t in range(5, 15):
     print(f"({t}, \"data/range_{pow(2, t) - 1}.txt\");")
     print_data(benchmarksForTree(pow(2, t) - 1, 64, True), f"data/range_{pow(2, t) - 1}.txt")

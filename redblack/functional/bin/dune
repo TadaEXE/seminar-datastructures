@@ -1,4 +1,4 @@
 (executable
  (public_name functional)
  (name main)
- (libraries functional))
+ (libraries functional benchmark))

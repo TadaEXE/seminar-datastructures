@@ -1,3 +1,5 @@
+(* Just copied code from Christoph *)
+
 type 'a action = Insert of 'a | Delete of 'a | Find of 'a
 
 let rec rev_rec a1 a2 = match a1 with
@@ -6,14 +8,6 @@ let rec rev_rec a1 a2 = match a1 with
 
 let rev xs = rev_rec xs []
 
-(*let parse_entry text = Scanf.sscanf_opt text "%[i|d|f]%d%s" (
-  fun qual x rest -> match qual with 
-    "i" -> (Insert x, rest) |
-    "d" -> (Delete x, rest) |
-    "f" -> (Find x, rest) |
-    (* This case is impossible but dune interpreter requires it anyways *)
-    c -> (Insert x, rest)
-)*)
 let parse_entry text =
   try Some (Scanf.sscanf text " %[idf]%d%[^ ]" (fun qual x rest ->
     match qual with

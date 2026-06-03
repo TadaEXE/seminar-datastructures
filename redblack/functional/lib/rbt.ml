@@ -160,6 +160,11 @@ let rec lookup tree x = match tree with
         | EQ -> Some a
         | GT -> lookup r x)
 
+(* Get Size of Tree *)
+let rec size tree = match tree with
+    | Empty -> 0
+    | Node(l, (_, _), r) -> (size l) + 1 + (size r)
+
 (* Invariants for testing *)
 
 let rec invc tree = match tree with

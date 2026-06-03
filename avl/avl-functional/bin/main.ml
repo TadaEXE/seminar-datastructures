@@ -91,7 +91,7 @@ let unbalanced_benchmarks = [|
   let _= Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks in
   Array.iter (fun (n, path) -> benchmark_unbalanced n path oc) unbalanced_benchmarks*)
 
-
+(* Random operations on balanced tree *)
 let benchmark_bal = let oc = open_out "./data/results_balanced.txt" in
   Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks
 
@@ -119,7 +119,7 @@ let rec benchmark_rep n t x_fun =
 
 let comp_n = [|15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35|]
 
-(*
+
 let benchmark_wb = let oc = open_out "./data/results_comp.txt" in
   let _ = print_endline "Best case insert" in
   let i_opt = Array.map (fun n -> (benchmark_rep n 5 (fun tree -> max tree + 1), n)) comp_n in
@@ -134,4 +134,3 @@ let benchmark_wb = let oc = open_out "./data/results_comp.txt" in
   let d_worst = Array.map (fun n -> (benchmark_rep n 5 (fun tree -> max tree), n)) comp_n in
   let _ = Array.iter (fun (dat, n) -> print_result ("d_worst" ^ (string_of_int n)) dat oc) d_worst in 
   ()
-  *)

@@ -3,12 +3,6 @@
 
 class VectorNode {
     public:
-        VectorNode(int key) { 
-            this->key = key;
-            height = 1;
-            left = -1;
-            right = -1;
-        };
         int key;
         int height;
         int left;
@@ -20,7 +14,10 @@ namespace avl {
 class AvlVec {
     public:
         AvlVec() {};
-        AvlVec(std::vector<VectorNode>* nodes) { this->nodes = *nodes; };
+        AvlVec(std::vector<VectorNode>* nodes) { 
+            this->nodes = *nodes; 
+            this->size = nodes->size();
+        };
         void ins(int x);
         void del(int x);
         bool find(int x);
@@ -28,6 +25,7 @@ class AvlVec {
         int balL2(int current);
         int balR1(int current);
         int balR2(int current);
+        void compareSizes();
 
         bool checkInv();
 
@@ -37,6 +35,7 @@ class AvlVec {
         int root = -1;
         bool balance(int current, int parent);
         void compress();
+        void addNode(int x);
 };
 
 }

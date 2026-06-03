@@ -182,7 +182,7 @@ bool avl_inv(Node* n) {
     int rh = height(n->right);
     // check that the stored height matches the actual height
     if (n->height != 1 + std::max(lh, rh)) {
-        std::cout << "Height: " << n->key << "\n";
+        std::cout << "Height: " << n << ", " << n->key << ", " << n->height << ", " << n->left->height << ", " << n->right->height << "\n";
         return false;
     }
 
@@ -194,7 +194,8 @@ bool avl_inv(Node* n) {
 // check that every key is within the valid range for its position in the tree
 bool search_tree_inv(Node* n, long long min, long long max) {
     if (n == nullptr) return true;
-    if (n->key <= min || n->key >= max) return false;
+
+    if (n->key < min || n->key > max) return false;
     return search_tree_inv(n->left, min, n->key)
         && search_tree_inv(n->right, n->key, max);
 }

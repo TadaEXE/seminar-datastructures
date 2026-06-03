@@ -95,9 +95,10 @@ let unbalanced_benchmarks = [|
   (34, "./data/benchmark_24.txt")|]
 
 (* TODO: here unbalanced did not work: 'Fatal error: exception Sys_error("./data/benchmark_15.txt: No such file or directory")'*)
+(*
 let benchmark_all = let oc = open_out "./data/results_long1.txt" in
   let _= Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks in
-  Array.iter (fun (n, path) -> benchmark_unbalanced n path oc) unbalanced_benchmarks
+  Array.iter (fun (n, path) -> benchmark_unbalanced n path oc) unbalanced_benchmarks*)
 
 (*let benchmark_bal = let oc = open_out "./data/results_balanced.txt" in
   Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks*)

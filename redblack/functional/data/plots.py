@@ -123,9 +123,9 @@ ax.plot(range(15,35), y_worst, label="worst case")
 ax.set_title(
     f"benchmarks on functional rbt implementation"
 )
-ax.set_xlabel("")
+ax.set_xlabel("depth")
 ax.set_ylabel("run time (seconds)")
-ax.set_xticks(range(15, 35))eval $(opam env)
+ax.set_xticks(range(15, 35))
 ax.legend()
 
 plt.show()

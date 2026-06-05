@@ -3,18 +3,19 @@
 
 namespace avl {
 
-class AvlRec {
+class AvlIt: public Avl {
     public:
-        AvlRec() { root = nullptr; };
-        AvlRec(Node* root) { this->root = root; };
+        AvlIt() { root = nullptr; };
+        AvlIt(Node* root) { this->root = root; };
         void ins(int x);
         void del(int x);
         bool find(int x);
-        Node* getRoot();
+        bool checkInv();
         Node* balL1(Node* current);
         Node* balL2(Node* current);
         Node* balR1(Node* current);
         Node* balR2(Node* current);
+        Node* getRoot();
 
     private:
         Node* root;

@@ -11,7 +11,7 @@ class VectorNode {
 
 namespace avl {
 
-class AvlVec {
+class AvlVec: public Avl {
     public:
         AvlVec() {};
         AvlVec(std::vector<VectorNode>* nodes) { 
@@ -28,6 +28,7 @@ class AvlVec {
         void compareSizes();
 
         bool checkInv();
+        void printLimit();
 
     private:
         std::vector<VectorNode> nodes;

@@ -284,3 +284,7 @@ bool AvlVec::checkInv() {
 void AvlVec::compareSizes() {
     std::cout << "Cap: " << nodes.capacity() << ", size: " << size << "\n";
 }
+
+void AvlVec::printLimit() {
+    std::cout << "Max address: " << nodes.data() + nodes.capacity() << "\n";
+}

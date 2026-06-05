@@ -1,5 +1,5 @@
 #include "avl_iterative.h"
-#include "avl_vector.h"
+#include "avl_compact.h"
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
@@ -9,10 +9,10 @@ using namespace avl;
 
 int main() {
     std::srand(0); 
-    AvlVec avl;
+    AvlComp avl;
     std::vector<int> trace;
-    for (int i = 0; i < 500000; i++) {
-        int random_value = std::rand() % 20000;
+    for (int i = 0; i < 10000; i++) {
+        int random_value = std::rand() % 50000;
         std::cout << "Insert " << i << ": " << random_value << "\n";
         trace.push_back(random_value);
         avl.ins(random_value);
@@ -23,6 +23,7 @@ int main() {
     for (int i = 0; i < 10000; i++) {
         int random_value = std::rand() % trace.size();
         std::cout << "Delete " << i << ": " << trace[random_value] << "\n";
+        if (i == 1) avl.printTree();
         avl.del(trace[random_value]);
         trace.erase(trace.begin() + random_value);
 
@@ -32,7 +33,7 @@ int main() {
 
 int someMain() {
     //Node* root = new Node(10); // start with an empty tree
-    AvlRec avl;
+    AvlIt avl;
     // --- insert tests ---
 
     // insert some values

@@ -12,6 +12,15 @@ struct Node {
     Node(int k) : key(k), height(1), left(nullptr), right(nullptr) {}
 };
 
+class Avl {
+    public:
+        virtual void ins(int x) = 0;
+        virtual void del(int x) = 0;
+        virtual bool find(int x) = 0;
+        virtual bool checkInv() = 0;
+};
+
+
 int height(Node* n);
 void updateHeight(Node* n);
 

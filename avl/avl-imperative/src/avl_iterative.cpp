@@ -9,7 +9,7 @@
 
 using namespace avl;
 
-Node* AvlRec::balL1(Node* current) {
+Node* AvlIt::balL1(Node* current) {
     //std::cout << HEIGHT(current) << ", " << HEIGHT(current->left) << ", " << HEIGHT(current->right) << ", " << HEIGHT(current->left->left) << ", " << HEIGHT(current->left->right) << "\n";
     Node* left = current->left;
     int heightB = HEIGHT(left->right);
@@ -21,7 +21,7 @@ Node* AvlRec::balL1(Node* current) {
     return left;
 }
 
-Node* AvlRec::balL2(Node* current) {
+Node* AvlIt::balL2(Node* current) {
     Node* left = current->left;
     Node* treeB = current->left->right;
     left->right = treeB->left;
@@ -34,7 +34,7 @@ Node* AvlRec::balL2(Node* current) {
     return treeB;
 }
 
-Node* AvlRec::balR1(Node* current) {
+Node* AvlIt::balR1(Node* current) {
     Node* right = current->right;
     int heightB = HEIGHT(right->left);
     current->right = right->left;
@@ -44,7 +44,7 @@ Node* AvlRec::balR1(Node* current) {
     return right;
 }
 
-Node* AvlRec::balR2(Node* current) {
+Node* AvlIt::balR2(Node* current) {
     Node* right = current->right;
     Node* treeB = current->right->left;
     right->left = treeB->right;
@@ -58,7 +58,7 @@ Node* AvlRec::balR2(Node* current) {
     return treeB;
 }
 
-bool AvlRec::balance(Node* current, Node* parent) {
+bool AvlIt::balance(Node* current, Node* parent) {
     int leftHeight = HEIGHT(current->left);
     int rightHeight = HEIGHT(current->right);
     //std::cout << leftHeight << ", " << rightHeight << "\n";
@@ -117,7 +117,7 @@ bool AvlVec::balance(Node* current, Node* parent) {
 }
     */
 
-void AvlRec::ins(int x) {
+void AvlIt::ins(int x) {
     std::vector<Node*> trace;
     Node* current = this->root;
     if (current == nullptr) {
@@ -165,7 +165,7 @@ void AvlRec::ins(int x) {
     }
 }
 
-void AvlRec::del(int x) {
+void AvlIt::del(int x) {
     if (this->root == nullptr) return;
     std::vector<Node*> trace;
     Node* current = this->root;
@@ -223,7 +223,7 @@ void AvlRec::del(int x) {
     }
 }
 
-bool AvlRec::find(int x) {
+bool AvlIt::find(int x) {
     Node* current = root;
     while (current != nullptr) {
         if (x == current->key) return true;
@@ -233,4 +233,10 @@ bool AvlRec::find(int x) {
     return false;
 }
 
-Node* AvlRec::getRoot() { return root; }
+bool AvlIt::checkInv() {
+    return avl_inv(root);
+}
+
+Node* AvlIt::getRoot() {
+    return root;
+}

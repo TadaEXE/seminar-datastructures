@@ -130,7 +130,7 @@ void benchmark(char* path, Avl* avl) {
             }
             auto end = clock();
             insSum += end - start;
-            //std::cout << "Insertion time: " << end - start << "\n";
+            std::cout << "Insertion time: " << end - start << "\n";
         } else {
             auto start = clock();
             for (int i = 0; i < sequence.size(); i++) {
@@ -138,7 +138,7 @@ void benchmark(char* path, Avl* avl) {
             }
             auto end = clock();
             delSum += end - start;
-            //std::cout << "Deletion time: " << end - start << "\n";
+            std::cout << "Deletion time: " << end - start << "\n";
         }
         isInsertion = !isInsertion;
         sequence = nextSequence(&file);
@@ -149,6 +149,7 @@ void benchmark(char* path, Avl* avl) {
     assert(avl->checkInv());
 }
 
+/*
 void benchmarkRec(char* path, Node* root) {
     bool isInsertion = true;
     std::ifstream file(path);
@@ -182,13 +183,14 @@ void benchmarkRec(char* path, Node* root) {
     std::cout << "Average delete: " << delSum / count * 2 << "\n";
     assert(avl_inv(root));
 }
+    */
 
 void clearBenchmark(int n) {
     std::srand(0); 
     AvlVec avlVec;
     AvlIt avlIt;
     AvlComp avlComp;
-    Node* AvlIt = new Node(0);
+    AvlRec avlRec;
     std::vector<int> inserts;
     std::vector<int> insertsTmp;
     std::vector<int> deletes;
@@ -206,12 +208,12 @@ void clearBenchmark(int n) {
     std::cout << "\nRecursive: " << n << "\n";
     auto t0 = clock();
     for (int i = 0; i < inserts.size(); i++) {
-        AvlIt = insert(AvlIt, inserts[i]);
+        avlRec.ins(inserts[i]);
     }
     auto t1 = clock();
     std::cout << "Insert: " << t1 - t0 << "\n";
     for (int i = 0; i < deletes.size(); i++) {
-        AvlIt = deleteNode(AvlIt, deletes[i]);
+        avlRec.del(deletes[i]);
     }
     auto t2 = clock();
     std::cout << "Remove: " << t2 - t1 << "\n";
@@ -256,7 +258,7 @@ void clearBenchmark(int n) {
     std::cout << "Remove: " << t11 - t10 << "\n";
 }
 
-int main() 
+int tmp() 
 {
     char* paths[] = {
         "../avl-functional/data/range_32767.txt",
@@ -271,7 +273,7 @@ int main()
 "../avl-functional/data/range_16777215.txt",
 "../avl-functional/data/range_33554431.txt",
     };
-    for (int n = 0; n < 11; n++) {
+    for (int n = 0; n < 10; n++) {
         /*
         std::cout << "Compact: " << n << "\n";
         uint64_t root4 = constructBalancedCompact(n + 15, 0, 64);
@@ -279,27 +281,33 @@ int main()
         */
         
         std::cout << "Recursive: " << n << "\n";
-        Node* root2 = constructBalanced(n + 15, 0, 64);
-        benchmarkRec(paths[n], root2);
+        AvlRec* rec = new AvlRec(constructBalanced(n + 15, 0, 64));
+        benchmark(paths[n], rec);
+        rec->free();
+
+        
 
         std::cout << "Iterative: " << n << "\n";
-        Node* root1 = constructBalanced(n + 15, 0, 64);
-        benchmark(paths[n], new AvlIt(root1));
+        AvlIt* it = new AvlIt(constructBalanced(n + 15, 0, 64));
+        benchmark(paths[n], it);
+        it->free();
+        
         
         /*
         std::cout << "Vector: \n";
-        std::vector<VectorNode> nodes;
-        constructBalancedVector(n + 15, 0, 64, &nodes);
-        auto avl = new AvlVec(&nodes);
+        auto vec = new AvlVec();
+        constructBalancedVector(n + 15, 0, 64, vec->getNodes());
+        vec->setSize(vec->getNodes()->size());
         //Avoid starting with resize
-        benchmark(paths[n], avl);
-        avl->printLimit();
+        benchmark(paths[n], vec);
+        vec->printLimit();
+        vec->free();
         */
     }
 
 }
 
-int tmp() {
+int main() {
     for (int n = 0; n < 10; n++) {
         clearBenchmark((n + 1) * 50000);
     }

@@ -16,6 +16,9 @@ class AvlIt: public Avl {
         Node* balR1(Node* current);
         Node* balR2(Node* current);
         Node* getRoot();
+        void free();
+        int min();
+        int max();
 
     private:
         Node* root;

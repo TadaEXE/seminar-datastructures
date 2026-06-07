@@ -9,6 +9,12 @@ namespace avl {
     Right-heavy: 01
     Balance: 00
 */
+
+#define MASK_MAX (UINT64_MAX - 3)
+#define BALANCE(raw) ((uint64_t) (raw) & 3)
+#define SET_BALANCE(raw, bal) (((uint64_t) (raw) & MASK_MAX) | (bal))
+#define CLEAN(raw) ((CompactNode*) ((raw) & MASK_MAX))
+
 class CompactNode {
     public:
         int key;
@@ -34,6 +40,10 @@ class AvlComp: public Avl {
         CompactNode* getRoot();
         bool checkInv();
         void printTree();
+        void free();
+
+        int min();
+        int max();
 
     private:
         uint64_t root;
@@ -43,6 +53,7 @@ class AvlComp: public Avl {
         uint64_t balL2(uint64_t current);
         uint64_t balR1(uint64_t current);
         uint64_t balR2(uint64_t current);
+        void freeRec(uint64_t current);
         int checkAndHeight(uint64_t current);
 };
 

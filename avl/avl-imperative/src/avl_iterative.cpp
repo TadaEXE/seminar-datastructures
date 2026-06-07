@@ -240,3 +240,20 @@ bool AvlIt::checkInv() {
 Node* AvlIt::getRoot() {
     return root;
 }
+
+void AvlIt::free() { 
+    freeTree(root);
+    this->root = nullptr; 
+}
+
+int AvlIt::min() {
+    Node* t = root;
+    while (t->left) t = t->left;
+    return t->key;
+}
+
+int AvlIt::max() {
+    Node* t = root;
+    while (t->right) t = t->right;
+    return t->key;
+}

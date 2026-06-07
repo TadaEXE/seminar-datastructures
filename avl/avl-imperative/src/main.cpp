@@ -1,5 +1,4 @@
-#include "avl_iterative.h"
-#include "avl_compact.h"
+#include "bench_helpers.h"
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
@@ -8,6 +7,22 @@
 using namespace avl;
 
 int main() {
+    AvlVec* avl = (AvlVec*) makeBalanced(3, 2);
+    for (int i = 0; i < avl->getNodes()->size(); i++) {
+        std::cout << i << ": "<< avl->getNodes()->at(i).left << ", " << avl->getNodes()->at(i).right << "\n";
+    }
+    std::cout << avl->min() << "\n";
+    int x0   = avl->min() - 64;
+    int step = -64;
+    for (int i = 0; i < 10000; i++) {
+        //std::cout << "Insert: " << x0 + i * step << "\n";
+        assert(avl->checkInv());
+        avl->ins(x0 + i * step);
+    }
+
+}
+
+int tmp() {
     std::srand(0); 
     AvlComp avl;
     std::vector<int> trace;
@@ -23,7 +38,6 @@ int main() {
     for (int i = 0; i < 10000; i++) {
         int random_value = std::rand() % trace.size();
         std::cout << "Delete " << i << ": " << trace[random_value] << "\n";
-        if (i == 1) avl.printTree();
         avl.del(trace[random_value]);
         trace.erase(trace.begin() + random_value);
 
@@ -66,7 +80,7 @@ int someMain() {
     assert(search_tree_inv(avl.getRoot()));
 
     std::cout << "Tree after insertions: ";
-    inorder(avl.getRoot());
+    //inorder(avl.getRoot());
     std::cout << "\n";
 
 
@@ -101,7 +115,7 @@ int someMain() {
     assert(search_tree_inv(avl.getRoot()));
 
     std::cout << "Tree after some deletions: ";
-    inorder(avl.getRoot());
+    //inorder(avl.getRoot());
     std::cout << "\n";
 
     // delete the remaining values

@@ -92,8 +92,11 @@ let unbalanced_benchmarks = [|
   Array.iter (fun (n, path) -> benchmark_unbalanced n path oc) unbalanced_benchmarks*)
 
 (* Random operations on balanced tree *)
+
+(*
 let benchmark_bal = let oc = open_out "./data/results_balanced.txt" in
   Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks
+*)
 
 (* In this case, the maximum is the most shallow node *)
 let rec max tree = match tree with
@@ -107,30 +110,41 @@ let rec min tree = match tree with
   Node (_, x, Leaf, _) -> x |
   Node (_, _, left, _) -> min left
 
-let rec benchmark_rep n t x_fun =
+let rec deletions n x step isDel = match n with
+  0 -> [] |
+  n -> match isDel with 
+    true -> Delete(x) :: deletions (n - 1) (x + step) step isDel |
+    false -> Insert(x) :: deletions (n - 1) (x + step) step isDel
+
+let rec benchmark_extreme n t x_fun step isDel =
   match t with 
   0 -> [] | 
   t ->
-    let tree = unbalanced_tree 64 n in
-    let x = x_fun tree in 
-    let v = latency1 4000000L (insert x) tree in
+    let tree = spaced_tree 64 n in
+    let x_init = x_fun tree in 
+    let act = deletions 10000 x_init step isDel in
+    let v = latency1 400L (execute_actions act) tree in
     let dat = match v with (s, t1 :: ts) :: vs -> t1 | v -> (make 0L) in
-    dat :: benchmark_rep n (t - 1) x_fun
+    dat :: benchmark_extreme n (t - 1) x_fun step isDel
 
 let comp_n = [|15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35|]
 
 
-let benchmark_wb = let oc = open_out "./data/results_comp.txt" in
-  let _ = print_endline "Best case insert" in
-  let i_opt = Array.map (fun n -> (benchmark_rep n 5 (fun tree -> max tree + 1), n)) comp_n in
-  let _ = Array.iter (fun (dat, n) -> print_result ("i_opt_" ^ (string_of_int n)) dat oc) i_opt in
-  let _ = print_endline "Worst case insert" in
-  let i_worst = Array.map (fun n -> (benchmark_rep n 5 (fun tree -> min tree - 1), n)) comp_n in
-  let _ = Array.iter (fun (dat, n) -> print_result ("i_worst_" ^ (string_of_int n)) dat oc) i_worst in
+let benchmark_wb = let oc = open_out "./data/results_tmp.txt" in
   let _ = print_endline "Best case delete" in
-  let d_opt = Array.map (fun n -> (benchmark_rep n 5 (fun tree -> min tree), n)) comp_n in
+  let d_opt = Array.map (fun n -> (
+    benchmark_extreme n 5 (fun tree -> min tree) 64 true, n)) comp_n in
   let _ = Array.iter (fun (dat, n) -> print_result ("d_opt" ^ (string_of_int n)) dat oc) d_opt in
   let _ = print_endline "Worst case delete" in
-  let d_worst = Array.map (fun n -> (benchmark_rep n 5 (fun tree -> max tree), n)) comp_n in
+  let d_worst = Array.map (fun n -> (
+    benchmark_extreme n 5 (fun tree -> max tree) (-64) true, n)) comp_n in
   let _ = Array.iter (fun (dat, n) -> print_result ("d_worst" ^ (string_of_int n)) dat oc) d_worst in 
+  let _ = print_endline "Best case insert" in
+  let i_opt = Array.map (fun n -> (
+    benchmark_extreme n 5 (fun tree -> max tree + 64) 64 false, n)) comp_n in
+  let _ = Array.iter (fun (dat, n) -> print_result ("i_opt_" ^ (string_of_int n)) dat oc) i_opt in
+  let _ = print_endline "Worst case insert" in
+  let i_worst = Array.map (fun n -> (
+    benchmark_extreme n 5 (fun tree -> min tree - 64) (-64) false, n)) comp_n in
+  let _ = Array.iter (fun (dat, n) -> print_result ("i_worst_" ^ (string_of_int n)) dat oc) i_worst in
   ()

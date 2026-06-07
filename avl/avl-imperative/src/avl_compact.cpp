@@ -7,11 +7,6 @@
 
 using namespace avl;
 
-#define MASK_MAX (UINT64_MAX - 3)
-#define BALANCE(raw) ((uint64_t) (raw) & 3)
-#define SET_BALANCE(raw, bal) (((uint64_t) (raw) & MASK_MAX) | (bal))
-#define CLEAN(raw) ((CompactNode*) ((raw) & MASK_MAX))
-
 uint64_t AvlComp::balL1(uint64_t current) {
     //std::cout << HEIGHT(current) << ", " << HEIGHT(current->left) << ", " << HEIGHT(current->right) << ", " << HEIGHT(current->left->left) << ", " << HEIGHT(current->left->right) << "\n";
     CompactNode* nodeC = CLEAN(current);
@@ -198,7 +193,7 @@ void AvlComp::del(int x) {
 
     if (replaced == trace[traceSize - 1]) {
         modChild = CLEAN(replaced)->right;
-        isLeftChild = x < CLEAN(trace[traceSize - 2])->key;
+        if (traceSize > 1) isLeftChild = x < CLEAN(trace[traceSize - 2])->key;
     } else if (replaced == trace[traceSize - 2]) {
         //std::cout << "B: " << traceSize << "," << trace[traceSize - 2]->key << ", "<< trace[traceSize - 1]->key << "\n";
         modChild = CLEAN(trace[traceSize - 1])->left;
@@ -209,7 +204,6 @@ void AvlComp::del(int x) {
         modChild = CLEAN(trace[traceSize - 1])->left;
         isLeftChild = false;
     }
-
     delete CLEAN(trace[traceSize - 1]);
     //Skip the last node of the trace since it has been deleted
     int index = traceSize - 1;
@@ -353,4 +347,30 @@ bool AvlComp::checkInv() {
     int heightCalc = checkAndHeight(root);
     if (heightCalc == -1) return false;
     return heightCalc == height;
+}
+
+void AvlComp::freeRec(uint64_t current) {
+    if (current == 0) return;
+    CompactNode* cleaned = CLEAN(current);
+    freeRec(cleaned->left);
+    freeRec(cleaned->right);
+    delete cleaned;
+}
+
+void AvlComp::free() {
+    freeRec(root);
+    this->root = 0;
+    this->height = 0;
+}
+
+int AvlComp::min() {
+    CompactNode* t = CLEAN(root);
+    while(t->left) t = CLEAN(t->left);
+    return t->key;
+}
+
+int AvlComp::max() {
+    CompactNode* t = CLEAN(root);
+    while(t->right) t = CLEAN(t->right);
+    return t->key;
 }

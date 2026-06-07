@@ -78,22 +78,18 @@ bool AvlVec::balance(int current, int parent) {
     bool changed;
     if (leftHeight > rightHeight && HEIGHT(nodes[nodes[current].left].left, nodes) >= 
         HEIGHT(nodes[nodes[current].left].right, nodes)) {
-        //std::cout << "A1\n";
         changed = HEIGHT(nodes[nodes[current].left].left, nodes) > 
             HEIGHT(nodes[nodes[current].left].right, nodes);
         res = balL1(current);
     } else if (leftHeight > rightHeight) {
-        //std::cout << "B1\n";
         changed = true;
         res = balL2(current);
     } else if (HEIGHT(nodes[nodes[current].right].right, nodes) >= 
             HEIGHT(nodes[nodes[current].right].left, nodes)) {
-        //std::cout << "C1\n";
         changed = HEIGHT(nodes[nodes[current].right].right, nodes) > 
             HEIGHT(nodes[nodes[current].right].left, nodes);
         res = balR1(current);
     } else {
-        //std::cout << "D1\n";
         changed = true;
         res = balR2(current);
     }
@@ -149,7 +145,6 @@ void AvlVec::ins(int x) {
             bool changed = balance(current, i > 0 ? trace[i - 1] : -1);
             //The rebalancing reduced the height to the value before inserting
             if (changed) return;
-            return;
         }
     }
 }
@@ -256,14 +251,16 @@ bool AvlVec::checkInv() {
         std::cout << "Invalid root: " << root << ", " << nodes.size() << "\n";
         return false;
     }
+    int nodeCount = 0;
     for (int i = 0; i < nodes.size(); i++) {
         if (nodes[i].height > 0) {
+            nodeCount++;
             if (nodes[i].left >= nodes.size() && nodes[i].left != -1 || nodes[i].right >= nodes.size() && nodes[i].right != -1) {
                 std::cout << "Out of bounds: " << i << ", " << nodes[i].left << ", " << nodes[i].right << ", " << nodes.size() << "\n";
                 return false;
             }
             if (nodes[i].height != 1 + std::max(HEIGHT(nodes[i].left, nodes), HEIGHT(nodes[i].right, nodes))) {
-                std::cout << "Incorrect height " << i << ";" << nodes[i].key << ", " << nodes[i].height << ", " << nodes[i].right << ", " << nodes[i].left << "\n";
+                std::cout << "Incorrect height " << i << ";" << nodes[i].key << ", " << nodes[i].height << ", " << nodes[i].left << ", " << nodes[i].right << "\n";
                 return false;
             }
             if (std::abs(HEIGHT(nodes[i].left, nodes) - HEIGHT(nodes[i].right, nodes)) > 1) {
@@ -277,6 +274,9 @@ bool AvlVec::checkInv() {
             }
         }
     }
+    if (nodeCount != size) {
+        std::cout << "Expected size: " << nodeCount << " but was: " << size << "\n"; 
+    }
     return true;
 }
 
@@ -287,4 +287,28 @@ void AvlVec::compareSizes() {
 
 void AvlVec::printLimit() {
     std::cout << "Max address: " << nodes.data() + nodes.capacity() << "\n";
+}
+
+void AvlVec::free() {
+    nodes = std::vector<VectorNode>();
+    root = -1;
+    size = 0;
+}
+
+std::vector<VectorNode>* AvlVec::getNodes() {
+    return &nodes;
+}
+
+int AvlVec::min() {
+    if (root == -1) return 0;
+    int t = root;
+    while (nodes[t].left != -1) t = nodes[t].left;
+    return nodes[t].key;
+}
+
+int AvlVec::max() {
+    if (root == -1) return 0;
+    int t = root;
+    while (nodes[t].right != -1) t = nodes[t].right;
+    return nodes[t].key;
 }

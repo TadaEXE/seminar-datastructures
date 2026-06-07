@@ -16,7 +16,7 @@ void updateHeight(Node* n) {
 // left side grew too tall, rebalance by rotating right
 // LL: single rotation, LR: double rotation
 // balance factor = height(left) - height(right), if > 1 then left is too tall
-Node* balL(Node* z) {
+Node* AvlRec::balL(Node* z) {
     Node* left  = z->left;
     Node* right = z->right;
 
@@ -55,7 +55,7 @@ Node* balL(Node* z) {
 
 // right side grew too tall, mirror of balL
 // RR: single rotation, RL: double rotation
-Node* balR(Node* z) {
+Node* AvlRec::balR(Node* z) {
     Node* left  = z->left;
     Node* right = z->right;
 
@@ -91,18 +91,26 @@ Node* balR(Node* z) {
     }
 }
 
+bool AvlRec::find(int key) {
+    return search(root, key);
+}
+
 // search for a key in the tree, standard binary search tree search
 // if found return true, if not found return false
 // if key is less than current node, go left, if greater go right
-bool search(Node* n, int key) {
+bool AvlRec::search(Node* n, int key) {
     if (n == nullptr) return false;
     if (key == n->key) return true;
     if (key < n->key) return search(n->left, key);
     return search(n->right, key);
 }
 
+void AvlRec::ins(int key) {
+    root = insert(root, key);
+}
+
 // go left -> balL, go right -> balR
-Node* insert(Node* n, int key) {
+Node* AvlRec::insert(Node* n, int key) {
     if (n == nullptr) return new Node(key);
 
     if (key < n->key) {
@@ -121,7 +129,7 @@ Node* insert(Node* n, int key) {
 // if right child is null, then current node is max, return left child as remaining tree
 // else go right and keep looking for max, then balL to fix the tree
 // returns pair of (remaining tree after removing max, max key)
-std::pair<Node*, int> split_max(Node* t) {
+std::pair<Node*, int> AvlRec::split_max(Node* t) {
     if (t->right == nullptr) {
         int maxKey = t->key;
         Node* remaining = t->left;
@@ -133,8 +141,12 @@ std::pair<Node*, int> split_max(Node* t) {
     return {balL(t), maxKey};
 }
 
+void AvlRec::del(int key) {
+    root = deleteNode(root, key);
+}
+
 // opposite of insert: left shrinks -> balR, right shrinks -> balL
-Node* deleteNode(Node* n, int key) {
+Node* AvlRec::deleteNode(Node* n, int key) {
     if (n == nullptr) return nullptr;
 
     if (key < n->key) {
@@ -157,6 +169,15 @@ Node* deleteNode(Node* n, int key) {
     n->key  = predKey;
     n->left = newLeft;
     return balR(n); // left shrank
+}
+
+void AvlRec::free() {
+    freeTree(root);
+    this->root = nullptr;
+}
+
+bool AvlRec::checkInv() {
+    return avl_inv(root) && search_tree_inv(root);
 }
 
 void inorder(Node* n) {
@@ -198,4 +219,16 @@ bool search_tree_inv(Node* n, long long min, long long max) {
     if (n->key < min || n->key > max) return false;
     return search_tree_inv(n->left, min, n->key)
         && search_tree_inv(n->right, n->key, max);
+}
+
+int AvlRec::min() {
+    Node* t = root;
+    while (t->left) t = t->left;
+    return t->key;
+}
+
+int AvlRec::max() {
+    Node* t = root;
+    while (t->right) t = t->right;
+    return t->key;
 }

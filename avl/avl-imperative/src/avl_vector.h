@@ -1,4 +1,5 @@
 #include "avl.h"
+#include <iostream>
 #include <vector>
 
 class VectorNode {
@@ -14,21 +15,23 @@ namespace avl {
 class AvlVec: public Avl {
     public:
         AvlVec() {};
-        AvlVec(std::vector<VectorNode>* nodes) { 
-            this->nodes = *nodes; 
-            this->size = nodes->size();
-        };
         void ins(int x);
         void del(int x);
         bool find(int x);
-        int balL1(int current);
-        int balL2(int current);
-        int balR1(int current);
-        int balR2(int current);
+        void free();
         void compareSizes();
 
         bool checkInv();
         void printLimit();
+
+        std::vector<VectorNode>* getNodes();
+        void setSize() { 
+            this->size = this->nodes.size(); 
+            this->root = 0;
+        }
+
+        int min();
+        int max();
 
     private:
         std::vector<VectorNode> nodes;
@@ -37,6 +40,11 @@ class AvlVec: public Avl {
         bool balance(int current, int parent);
         void compress();
         void addNode(int x);
+
+        int balL1(int current);
+        int balL2(int current);
+        int balR1(int current);
+        int balR2(int current);
 };
 
 }

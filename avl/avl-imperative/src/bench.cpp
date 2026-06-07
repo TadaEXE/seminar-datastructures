@@ -5,40 +5,13 @@
 #include <chrono>
 #include <iomanip>
 #include "avl.h"
+#include "bench_helpers.h"
+#include <assert.h>
 
 // current time in seconds
 double getTime() {
     auto t = std::chrono::high_resolution_clock::now();
     return std::chrono::duration<double>(t.time_since_epoch()).count();
-}
-
-// build a left-heavy AVL tree
-// at every node: left subtree has depth-1, right subtree has depth-2
-// so the leftmost path is much longer than the rightmost
-Node* buildUnbalancedHelper(int& nextKey, int step, int depth) {
-    if (depth <= 0) return nullptr;
-    Node* left = buildUnbalancedHelper(nextKey, step, depth - 1);
-    Node* root = new Node(nextKey);
-    nextKey += step;
-    root->left  = left;
-    root->right = buildUnbalancedHelper(nextKey, step, depth - 2);
-    root->height = 1 + std::max(height(root->left), height(root->right));
-    return root;
-}
-
-Node* buildUnbalanced(int step, int depth) {
-    int nextKey = step; // start from step so all keys are multiples of step
-    return buildUnbalancedHelper(nextKey, step, depth);
-}
-
-Node* buildBalanced(int minKey, int step, int depth) {
-    if (depth <= 0) return nullptr;
-    int rootKey = minKey + (int)(1LL << (depth - 1)) * step;
-    Node* root = new Node(rootKey);
-    root->left  = buildBalanced(minKey,   step, depth - 1);
-    root->right = buildBalanced(rootKey,  step, depth - 1);
-    root->height = depth; // perfectly balanced: height = depth
-    return root;
 }
 
 // smallest key = (leftmost path in BST)
@@ -65,22 +38,64 @@ void writeResult(const std::string& name, const std::vector<double>& times, std:
     out.flush();
 }
 
+std::vector<double> benchInsertClear(int n, int reps, int version) {
+    Avl* avl;
+    if (version == 0) avl = new AvlRec();
+    else if (version == 1) avl = new AvlIt();
+    else if (version == 2) avl = new AvlVec();
+    else avl = new AvlComp();
+    std::vector<int> inserts = getFullInserts(n);
+    std::vector<double> times;
+    for (int t = 0; t < reps; t++) {
+        auto t0 = getTime();
+        for (int i = 0; i < inserts.size(); i++) {
+            avl->ins(inserts[i]);
+        }
+        times.push_back((getTime() - t0) / inserts.size());  
+        avl->free(); 
+    }
+    delete avl;
+    return times;
+}
+
+std::vector<double> benchDeleteClear(int n, int reps, int version) {
+    Avl* avl;
+    if (version == 0) avl = new AvlRec();
+    else if (version == 1) avl = new AvlIt();
+    else if (version == 2) avl = new AvlVec();
+    else avl = new AvlComp();
+    std::vector<int> inserts = getFullInserts(n);
+    std::vector<int> deletes = getFullDeletes(n);
+    std::vector<double> times;
+    for (int t = 0; t < reps; t++) { 
+        for (int i = 0; i < inserts.size(); i++) avl->ins(inserts[i]);
+        auto t0 = getTime();
+        for (int i = 0; i < deletes.size(); i++) {
+            avl->del(deletes[i]);
+        }
+        times.push_back((getTime() - t0) / inserts.size()); 
+        avl->free();  
+    }
+    delete avl;
+    return times;
+}
+
 // C++ trees are mutable so we can't repeat the same insert like OCaml does
 // Instead we insert K keys in the same direction and divide by K
-std::vector<double> benchInsert(int depth, int reps, bool worst) {
+std::vector<double> benchInsert(int depth, int reps, bool worst, int version) {
     const int K = 10000;
     std::vector<double> times;
     for (int i = 0; i < reps; i++) {
-        Node* tree = buildUnbalanced(64, depth);
-        int x0   = worst ? treeMin(tree) - 64 : treeMax(tree) + 64;
+        Avl* tree = makeUnbalanced(depth, version);
+        int x0   = worst ? tree->min() - 64 : tree->max() + 64;
         int step = worst ? -64 : 64;
 
         double t0 = getTime();
         for (int k = 0; k < K; k++)
-            tree = insert(tree, x0 + k * step);
+            tree->ins(x0 + k * step);
         times.push_back((getTime() - t0) / K);
 
-        freeTree(tree);
+        tree->free();
     }
     return times;
 }
@@ -88,24 +103,28 @@ std::vector<double> benchInsert(int depth, int reps, bool worst) {
 // preinsert K elements, then measure K deletes
 // best case: delete from the right side (short traversal, right is shallower)
 // worst case: delete from the left side (long traversal, left is deeper)
-std::vector<double> benchDelete(int depth, int reps, bool worst) {
+std::vector<double> benchDelete(int depth, int reps, bool worst, int version) {
     const int K = 10000;
     std::vector<double> times;
     for (int i = 0; i < reps; i++) {
-        Node* tree = buildUnbalanced(64, depth);
-        int x0   = worst ? treeMin(tree) - 64 : treeMax(tree) + 64;
+        Avl* tree = makeUnbalanced(depth, version);
+        assert(tree->checkInv());
+
+        int x0   = worst ? tree->max() : tree->min();
         int step = worst ? -64 : 64;
 
+        /*
+        //No preinsert, we want assume that n > K
         // preinsert so we have K elements to delete
         for (int k = 0; k < K; k++)
-            tree = insert(tree, x0 + k * step);
+            tree->ins(x0 + k * step);
+        */
 
         double t0 = getTime();
         for (int k = 0; k < K; k++)
-            tree = deleteNode(tree, x0 + k * step);
+            tree->del(x0 + k * step);
         times.push_back((getTime() - t0) / K);
-
-        freeTree(tree);
+        tree->free();
     }
     return times;
 }
@@ -132,7 +151,7 @@ std::vector<Cmd> parseLine(const std::string& line) {
 // run the mixed workload from a range_*.txt file
 // each line = one block of ~10000 commands, tree persists between blocks
 // same setup as the OCaml benchmark
-void benchMixed(const char* path, Node* tree, const std::string& label, std::ofstream& out) {
+void benchMixed(const char* path, Avl* tree, const std::string& label, std::ofstream& out) {
     std::ifstream file(path);
     if (!file.is_open()) {
         std::cerr << "could not open " << path << "\n";
@@ -147,15 +166,15 @@ void benchMixed(const char* path, Node* tree, const std::string& label, std::ofs
 
         double t0 = getTime();
         for (auto& cmd : cmds) {
-            if      (cmd.type == 'i') tree = insert(tree, cmd.key);
-            else if (cmd.type == 'd') tree = deleteNode(tree, cmd.key);
-            else                      search(tree, cmd.key);
+            if      (cmd.type == 'i') tree->ins(cmd.key);
+            else if (cmd.type == 'd') tree->del(cmd.key);
+            else                      tree->find(cmd.key);
         }
         times.push_back(getTime() - t0);
     }
 
     writeResult(label, times, out);
-    freeTree(tree);
+    tree->free();
 }
 
 // same depths and files as OCaml benchmark
@@ -174,42 +193,65 @@ const char* PATHS[] = {
     "../avl-functional/data/range_33554431.txt",
 };
 
-int main() {
-    std::ofstream compOut("results_comp_cpp.txt");
+/*
+    BenchMixed: time in seconds for 10000 operations, alternating between inserts and deletes
+    Worst/Best/Amortized: Average time in seconds for 1 operation
+*/
 
-    std::cout << "insert best case...\n";
-    for (int n = 15; n <= 34; n++) {
-        writeResult("i_opt_" + std::to_string(n), benchInsert(n, 5, false), compOut);
-        std::cout << "  n=" << n << "\n";
-    }
+int main() {
+    int version = 3;
+    char* path = "results_cpp_compact.txt";
+    char* path2 = "mixed_cpp_compact.txt";
+
+    /*
+    std::ofstream compOut(path);
 
     std::cout << "insert worst case...\n";
     for (int n = 15; n <= 34; n++) {
-        writeResult("i_worst_" + std::to_string(n), benchInsert(n, 5, true), compOut);
+        writeResult("i_worst_" + std::to_string(n), benchInsert(n, 5, true, version), compOut);
+        std::cout << "  n=" << n << "\n";
+    }
+
+    std::cout << "insert best case...\n";
+    for (int n = 15; n <= 34; n++) {
+        writeResult("i_opt_" + std::to_string(n), benchInsert(n, 5, false, version), compOut);
+        std::cout << "  n=" << n << "\n";
+    }
+
+    std::cout << "insert amortized case...\n";
+    for (int n = 1; n <= 10; n++) {
+        writeResult("i_amort_" + std::to_string(n*50000), benchInsertClear(n*50000, 5, version), compOut);
         std::cout << "  n=" << n << "\n";
     }
 
     std::cout << "delete best case...\n";
     for (int n = 15; n <= 34; n++) {
-        writeResult("d_opt" + std::to_string(n), benchDelete(n, 5, false), compOut);
+        writeResult("d_opt" + std::to_string(n), benchDelete(n, 5, false, version), compOut);
         std::cout << "  n=" << n << "\n";
     }
 
     std::cout << "delete worst case...\n";
     for (int n = 15; n <= 34; n++) {
-        writeResult("d_worst" + std::to_string(n), benchDelete(n, 5, true), compOut);
+        writeResult("d_worst" + std::to_string(n), benchDelete(n, 5, true, version), compOut);
+        std::cout << "  n=" << n << "\n";
+    }
+
+    std::cout << "delete amortized case...\n";
+    for (int n = 1; n <= 10; n++) {
+        writeResult("d_amort_" + std::to_string(n * 50000), benchDeleteClear(n * 50000, 5, version), compOut);
         std::cout << "  n=" << n << "\n";
     }
 
     compOut.close();
+    */
 
     // mixed workload: same range_*.txt files as OCaml 
-    std::ofstream mixedOut("results_mixed_cpp.txt");
+    std::ofstream mixedOut(path2);
 
     for (int i = 0; i < 11; i++) {
         int n = DEPTHS[i];
         std::cout << "mixed workload depth " << n << "...\n";
-        Node* tree = buildBalanced(0, 64, n);
+        Avl* tree = makeBalanced(n, version);
         benchMixed(PATHS[i], tree, "cpp_" + std::to_string(n), mixedOut);
     }
 

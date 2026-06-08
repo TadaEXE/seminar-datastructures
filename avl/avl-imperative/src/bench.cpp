@@ -4,13 +4,15 @@
 #include <vector>
 #include <chrono>
 #include <iomanip>
+#include <algorithm>
+#include <cctype>
 #include "avl.h"
 #include "bench_helpers.h"
 #include <assert.h>
 
 // current time in seconds
 double getTime() {
-    auto t = std::chrono::high_resolution_clock::now();
+    auto t = std::chrono::steady_clock::now();
     return std::chrono::duration<double>(t.time_since_epoch()).count();
 }
 
@@ -27,11 +29,13 @@ int treeMax(Node* t) {
 }
 
 // write results in the same format as OCaml's plots.py data_2 dict
-void writeResult(const std::string& name, const std::vector<double>& times, std::ofstream& out) {
+// second value is memory-related: C++ uses estimated bytes per operation.
+void writeResult(const std::string& name, const std::vector<double>& times,
+                 double memoryPerOperation, std::ofstream& out) {
     out << "\"" << name << "\":[";
     for (int i = 0; i < (int)times.size(); i++) {
         out << std::fixed << std::setprecision(9)
-            << "(" << times[i] << ", 0.0)";
+            << "(" << times[i] << ", " << memoryPerOperation << ")";
         if (i + 1 < (int)times.size()) out << ", ";
     }
     out << "],\n";
@@ -48,11 +52,11 @@ std::vector<double> benchInsertClear(int n, int reps, int version) {
     std::vector<double> times;
     for (int t = 0; t < reps; t++) {
         auto t0 = getTime();
-        for (int i = 0; i < inserts.size(); i++) {
+        for (int i = 0; i < (int)inserts.size(); i++) {
             avl->ins(inserts[i]);
         }
-        times.push_back((getTime() - t0) / inserts.size());  
-        avl->free(); 
+        times.push_back((getTime() - t0) / inserts.size());
+        avl->free();
     }
     delete avl;
     return times;
@@ -67,45 +71,65 @@ std::vector<double> benchDeleteClear(int n, int reps, int version) {
     std::vector<int> inserts = getFullInserts(n);
     std::vector<int> deletes = getFullDeletes(n);
     std::vector<double> times;
-    for (int t = 0; t < reps; t++) { 
-        for (int i = 0; i < inserts.size(); i++) avl->ins(inserts[i]);
+    for (int t = 0; t < reps; t++) {
+        for (int i = 0; i < (int)inserts.size(); i++) avl->ins(inserts[i]);
         auto t0 = getTime();
-        for (int i = 0; i < deletes.size(); i++) {
+        for (int i = 0; i < (int)deletes.size(); i++) {
             avl->del(deletes[i]);
         }
-        times.push_back((getTime() - t0) / inserts.size()); 
-        avl->free();  
+        times.push_back((getTime() - t0) / inserts.size());
+        avl->free();
     }
     delete avl;
     return times;
 }
 
+void writeResult(const std::string& name, const std::vector<double>& times, std::ofstream& out) {
+    writeResult(name, times, 0.0, out);
+}
+
+void resetMem(int version) {
+    if (version == 0 || version == 1) Node::bytes_allocated = 0;
+    else if (version == 2) VectorNode::bytes_allocated = 0;
+    else CompactNode::bytes_allocated = 0;
+}
+
+long long getMem(int version) {
+    if (version == 0 || version == 1) return Node::bytes_allocated;
+    else if (version == 2) return VectorNode::bytes_allocated;
+    else return CompactNode::bytes_allocated;
+}
+
 // C++ trees are mutable so we can't repeat the same insert like OCaml does
 // Instead we insert K keys in the same direction and divide by K
-std::vector<double> benchInsert(int depth, int reps, bool worst, int version) {
+std::pair<std::vector<double>, double> benchInsert(int depth, int reps, bool worst, int version) {
     const int K = 10000;
     std::vector<double> times;
+    long long total_bytes = 0;
     for (int i = 0; i < reps; i++) {
         Avl* tree = makeUnbalanced(depth, version);
         int x0   = worst ? tree->min() - 64 : tree->max() + 64;
         int step = worst ? -64 : 64;
 
+        resetMem(version);
         double t0 = getTime();
         for (int k = 0; k < K; k++)
             tree->ins(x0 + k * step);
         times.push_back((getTime() - t0) / K);
+        total_bytes += getMem(version);
 
         tree->free();
     }
-    return times;
+    return {times, (double)total_bytes / (reps * K)};
 }
 
 // preinsert K elements, then measure K deletes
 // best case: delete from the right side (short traversal, right is shallower)
 // worst case: delete from the left side (long traversal, left is deeper)
-std::vector<double> benchDelete(int depth, int reps, bool worst, int version) {
+std::pair<std::vector<double>, double> benchDelete(int depth, int reps, bool worst, int version) {
     const int K = 10000;
     std::vector<double> times;
+    long long total_bytes = 0;
     for (int i = 0; i < reps; i++) {
         Avl* tree = makeUnbalanced(depth, version);
         assert(tree->checkInv());
@@ -113,20 +137,16 @@ std::vector<double> benchDelete(int depth, int reps, bool worst, int version) {
         int x0   = worst ? tree->max() : tree->min();
         int step = worst ? -64 : 64;
 
-        /*
-        //No preinsert, we want assume that n > K
-        // preinsert so we have K elements to delete
-        for (int k = 0; k < K; k++)
-            tree->ins(x0 + k * step);
-        */
-
+        resetMem(version);
         double t0 = getTime();
         for (int k = 0; k < K; k++)
             tree->del(x0 + k * step);
         times.push_back((getTime() - t0) / K);
+        total_bytes += getMem(version);
+
         tree->free();
     }
-    return times;
+    return {times, (double)total_bytes / (reps * K)};
 }
 
 // parse one line of commands like "i42d-3f17i100..."
@@ -199,64 +219,51 @@ const char* PATHS[] = {
 */
 
 int main() {
-    int version = 3;
-    char* path = "results_cpp_compact.txt";
-    char* path2 = "mixed_cpp_compact.txt";
+    // insert/delete comparison: AvlRec (standard pointer-based) vs OCaml functional
+    {
+        const int compVersion = 0;
+        std::ofstream compOut("results_comp_cpp.txt");
 
-    /*
-    std::ofstream compOut(path);
-
-    std::cout << "insert worst case...\n";
-    for (int n = 15; n <= 34; n++) {
-        writeResult("i_worst_" + std::to_string(n), benchInsert(n, 5, true, version), compOut);
-        std::cout << "  n=" << n << "\n";
+        std::cout << "insert worst case...\n";
+        for (int n = 15; n <= 34; n++) {
+            auto [times, bytes] = benchInsert(n, 5, true, compVersion);
+            writeResult("i_worst_" + std::to_string(n), times, bytes, compOut);
+            std::cout << "  n=" << n << "\n";
+        }
+        std::cout << "insert best case...\n";
+        for (int n = 15; n <= 34; n++) {
+            auto [times, bytes] = benchInsert(n, 5, false, compVersion);
+            writeResult("i_opt_" + std::to_string(n), times, bytes, compOut);
+            std::cout << "  n=" << n << "\n";
+        }
+        std::cout << "delete best case...\n";
+        for (int n = 15; n <= 34; n++) {
+            auto [times, bytes] = benchDelete(n, 5, false, compVersion);
+            writeResult("d_opt" + std::to_string(n), times, bytes, compOut);
+            std::cout << "  n=" << n << "\n";
+        }
+        std::cout << "delete worst case...\n";
+        for (int n = 15; n <= 34; n++) {
+            auto [times, bytes] = benchDelete(n, 5, true, compVersion);
+            writeResult("d_worst" + std::to_string(n), times, bytes, compOut);
+            std::cout << "  n=" << n << "\n";
+        }
+        compOut.close();
     }
 
-    std::cout << "insert best case...\n";
-    for (int n = 15; n <= 34; n++) {
-        writeResult("i_opt_" + std::to_string(n), benchInsert(n, 5, false, version), compOut);
-        std::cout << "  n=" << n << "\n";
+    // mixed workload: compact AVL, same range_*.txt files as OCaml benchmark
+    {
+        const int mixVersion = 3;
+        std::ofstream mixedOut("mixed_cpp_compact.txt");
+        for (int i = 0; i < 11; i++) {
+            int n = DEPTHS[i];
+            std::cout << "mixed workload depth " << n << "...\n";
+            Avl* tree = makeBalanced(n, mixVersion);
+            benchMixed(PATHS[i], tree, "cpp_" + std::to_string(n), mixedOut);
+        }
+        mixedOut.close();
     }
 
-    std::cout << "insert amortized case...\n";
-    for (int n = 1; n <= 10; n++) {
-        writeResult("i_amort_" + std::to_string(n*50000), benchInsertClear(n*50000, 5, version), compOut);
-        std::cout << "  n=" << n << "\n";
-    }
-
-    std::cout << "delete best case...\n";
-    for (int n = 15; n <= 34; n++) {
-        writeResult("d_opt" + std::to_string(n), benchDelete(n, 5, false, version), compOut);
-        std::cout << "  n=" << n << "\n";
-    }
-
-    std::cout << "delete worst case...\n";
-    for (int n = 15; n <= 34; n++) {
-        writeResult("d_worst" + std::to_string(n), benchDelete(n, 5, true, version), compOut);
-        std::cout << "  n=" << n << "\n";
-    }
-
-    std::cout << "delete amortized case...\n";
-    for (int n = 1; n <= 10; n++) {
-        writeResult("d_amort_" + std::to_string(n * 50000), benchDeleteClear(n * 50000, 5, version), compOut);
-        std::cout << "  n=" << n << "\n";
-    }
-
-    compOut.close();
-    */
-
-    // mixed workload: same range_*.txt files as OCaml 
-    std::ofstream mixedOut(path2);
-
-    for (int i = 0; i < 11; i++) {
-        int n = DEPTHS[i];
-        std::cout << "mixed workload depth " << n << "...\n";
-        Avl* tree = makeBalanced(n, version);
-        benchMixed(PATHS[i], tree, "cpp_" + std::to_string(n), mixedOut);
-    }
-
-    mixedOut.close();
-
-    std::cout << "done! results in results_comp_cpp.txt and results_mixed_cpp.txt\n";
+    std::cout << "done! results in results_comp_cpp.txt and mixed_cpp_compact.txt\n";
     return 0;
 }

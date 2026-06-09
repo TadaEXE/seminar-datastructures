@@ -4,6 +4,18 @@ open Benchmark
 
 let rec pow2 n = if n == 0 then 1 else 2 * pow2 (n - 1)
 
+(* In this case, the maximum is the most shallow node *)
+let rec max tree = match tree with
+  Leaf -> 0 |
+  Node (_, x, _, Leaf) -> x |
+  Node (_, _, _, right) -> max right
+
+(* In this case, the minimum is the deepest Node *) 
+let rec min tree = match tree with
+  Leaf -> 0 |
+  Node (_, x, Leaf, _) -> x |
+  Node (_, _, left, _) -> min left
+
 let rec balanced_tree min step depth = 
   if depth <= 0 then Leaf 
   else let a = min + (pow2 (depth - 1)) * step in 
@@ -25,7 +37,8 @@ let rec unbalanced_tree a depth =
 let rec execute_actions act tree = match act with
   [] -> tree |
   Insert x :: act -> execute_actions act (insert x tree) |
-  Delete x :: act -> execute_actions act (delete x tree) |
+  Delete x :: act -> (*let _ = print_endline (string_of_bool (find x tree)) in*)
+    execute_actions act (delete x tree) |
   Find x :: act -> let _ = find x tree in execute_actions act tree
 
 let rec length lst = match lst with [] -> 0 | _ :: lst -> 1 + length lst
@@ -59,11 +72,9 @@ let benchmark_balanced n path oc =
   let res = benchmark tree1 ic 100 in
   print_result ("Balanced_" ^ string_of_int n) res oc
   
-
-
 let benchmark_unbalanced n path oc =  
     let tree2 = spaced_tree 64 n in
-    let _ = print_endline ("Constructed tree of size " ^ string_of_int (size tree2)) in
+    let _ = print_endline ("Constructed tree of size " ^ string_of_int (size tree2) ^ " with max " ^ string_of_int  (max tree2)) in
     let ic = open_in path in 
     let res = benchmark tree2 ic 100 in
     print_result ("Unbalanced_" ^ string_of_int n) res oc
@@ -82,10 +93,20 @@ let balanced_benchmarks = [|
 (25, "data/range_33554431.txt");
 |]
 
+(*
 let unbalanced_benchmarks = [|
   (21, "./data/benchmark_15.txt"); 
   (28, "./data/benchmark_20.txt");
   (34, "./data/benchmark_24.txt")|]
+*)
+
+let unbalanced_benchmarks = [|
+  (21, "./data/delete_max31.txt"); 
+  (22, "./data/delete_max32.txt");
+  (23, "./data/delete_max33.txt");
+  (24, "./data/delete_max34.txt");
+  (25, "./data/delete_max35.txt");
+  |]
 
 (*let benchmark_all = let oc = open_out "./data/results_long1.txt" in
   let _= Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks in
@@ -94,21 +115,14 @@ let unbalanced_benchmarks = [|
 (* Random operations on balanced tree *)
 
 (*
-let benchmark_bal = let oc = open_out "./data/results_balanced.txt" in
+let benchmark_bal = let oc = open_out "./data/results_ordered.txt" in
   Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks
 *)
 
-(* In this case, the maximum is the most shallow node *)
-let rec max tree = match tree with
-  Leaf -> 0 |
-  Node (_, x, _, Leaf) -> x |
-  Node (_, _, _, right) -> max right
+let benchmark_unbal = let oc = open_out "./data/results_rand_1.txt" in
+  Array.iter (fun (n, path) -> benchmark_balanced n path oc)  unbalanced_benchmarks
 
-(* In this case, the minimum is the deepest Node *) 
-let rec min tree = match tree with
-  Leaf -> 0 |
-  Node (_, x, Leaf, _) -> x |
-  Node (_, _, left, _) -> min left
+
 
 let rec deletions n x step isDel = match n with
   0 -> [] |
@@ -129,7 +143,7 @@ let rec benchmark_extreme n t x_fun step isDel =
 
 let comp_n = [|15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33;34;35|]
 
-
+(*
 let benchmark_wb = let oc = open_out "./data/results_tmp.txt" in
   let _ = print_endline "Best case delete" in
   let d_opt = Array.map (fun n -> (
@@ -148,3 +162,4 @@ let benchmark_wb = let oc = open_out "./data/results_tmp.txt" in
     benchmark_extreme n 5 (fun tree -> min tree - 64) (-64) false, n)) comp_n in
   let _ = Array.iter (fun (dat, n) -> print_result ("i_worst_" ^ (string_of_int n)) dat oc) i_worst in
   ()
+*)

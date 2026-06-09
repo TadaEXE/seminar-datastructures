@@ -1,6 +1,7 @@
 #pragma once
 #include <utility>
 #include <climits>
+#include <new>
 
 struct Node {
     int key;    // the value of the node
@@ -8,8 +9,20 @@ struct Node {
     Node* left;
     Node* right;
 
-    // for new nodes, height is 1 and children are null
     Node(int k) : key(k), height(1), left(nullptr), right(nullptr) {}
+    inline static long long bytes_allocated = 0;
+
+    // Count every Node allocation, then delegate to the global allocator.
+    // We don't count deallocations since we only care about the total memory used at the end of the benchmark.
+    static void* operator new(std::size_t size) {
+        bytes_allocated += static_cast<long long>(size);
+        return ::operator new(size);
+    }
+    // Free memory normally. We do not decrease bytes_allocated because
+    // we measure total allocations, not currently live memory.
+    static void operator delete(void* ptr) noexcept {
+        ::operator delete(ptr);
+    }
 };
 
 class Avl {

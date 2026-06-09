@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # OCaml data (from results_comp.txt)
-# values are total wall time for 4,000,000 operatiodepths
+# values are total wall time for 4,000,000 operations
 ocaml_data = {
 "i_opt_15":[(0.859174, 0), (0.839667, 0), (0.837437, 0), (0.849227, 0), (0.807497, 0)],
 "i_opt_16":[(0.827892, 0), (0.823218, 0), (0.846884, 0), (0.825509, 0), (0.819212, 0)],
@@ -129,25 +129,26 @@ cpp_d_worst = [avg(cpp_data[f"d_worst{n}"]) * 1e9 for n in depths]
 
 # --- plot ---
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-fig.suptitle("OCaml functional vs C++ imperative AVL tree")
+fig.suptitle("OCaml functional vs C++ imperative AVL tree\n(average of 5 runs per depth)")
 
-ax1.set_title("Idepthsert: best vs worst case")
+ax1.set_title("Insert: best case vs worst case")
 ax1.plot(depths, ocaml_i_opt,   "r--", label="OCaml best")
 ax1.plot(depths, ocaml_i_worst, "b--", label="OCaml worst")
 ax1.plot(depths, cpp_i_opt,     "r-",  label="C++ best")
 ax1.plot(depths, cpp_i_worst,   "b-",  label="C++ worst")
 ax1.set_xlabel("tree depth (n)")
-ax1.set_ylabel("time per operation (depths)")
+ax1.set_ylabel("time per operation (ns)")
 ax1.legend()
 
-ax2.set_title("Delete: best vs worst case")
+ax2.set_title("Delete: best case vs worst case")
 ax2.plot(depths, ocaml_d_opt,   "r--", label="OCaml best")
 ax2.plot(depths, ocaml_d_worst, "b--", label="OCaml worst")
 ax2.plot(depths, cpp_d_opt,     "r-",  label="C++ best")
 ax2.plot(depths, cpp_d_worst,   "b-",  label="C++ worst")
 ax2.set_xlabel("tree depth (n)")
-ax2.set_ylabel("time per operation (depths)")
+ax2.set_ylabel("time per operation (ns)")
 ax2.legend()
 
 plt.tight_layout()
+plt.savefig(os.path.join(SCRIPT_DIR, "comparison.png"), dpi=150)
 plt.show()

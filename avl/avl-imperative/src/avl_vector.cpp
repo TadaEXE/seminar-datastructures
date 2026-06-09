@@ -10,7 +10,11 @@
 using namespace avl;
 
 void AvlVec::addNode(int key) {
+    std::size_t old_cap = nodes.capacity();
     nodes.resize(nodes.size() + 1);
+    std::size_t new_cap = nodes.capacity();
+    if (new_cap > old_cap)
+        VectorNode::bytes_allocated += static_cast<long long>((new_cap - old_cap) * sizeof(VectorNode));
     nodes[nodes.size() - 1].height = 1;
     nodes[nodes.size() - 1].key = key;
     nodes[nodes.size() - 1].left = -1;

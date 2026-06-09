@@ -8,6 +8,10 @@ class VectorNode {
         int height;
         int left;
         int right;
+
+        // Count every Node allocation, then delegate to the global allocator.
+        // Used for the allocation benchmark.
+        inline static long long bytes_allocated = 0;
 };
 
 namespace avl {

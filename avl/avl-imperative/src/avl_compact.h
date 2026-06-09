@@ -1,6 +1,7 @@
 #include "avl.h"
 #include <cstdint>
 #include <vector>
+#include <new>
 
 namespace avl {
 /*
@@ -19,11 +20,25 @@ class CompactNode {
     public:
         int key;
         uint64_t left;
-        uint64_t right; 
+        uint64_t right;
         CompactNode(int key) {
             this->key = key;
             this->left = 0;
             this->right = 0;
+        }
+
+        // Count every Node allocation, then delegate to the global allocator.
+        // Used for the allocation benchmark.
+        inline static long long bytes_allocated = 0;
+        // Count every CompactNode allocation, then delegate to the global allocator.
+        static void* operator new(std::size_t size) {
+            bytes_allocated += static_cast<long long>(size);
+            return ::operator new(size);
+        }
+        // Free memory normally. We do not subtract from bytes_allocated because
+        // the benchmark measures total allocated bytes, not currently live memory.
+        static void operator delete(void* ptr) noexcept {
+            ::operator delete(ptr);
         }
 };
 

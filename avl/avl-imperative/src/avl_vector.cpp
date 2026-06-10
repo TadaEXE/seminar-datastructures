@@ -247,6 +247,7 @@ void AvlVec::compress() {
             }
         }
         nodes.resize(size);
+        VectorNode::bytes_allocated += nodes.capacity() * sizeof(VectorNode);
     }
 }
 

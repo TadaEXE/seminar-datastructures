@@ -10,6 +10,7 @@ struct Node {
     Node* right;
 
     Node(int k) : key(k), height(1), left(nullptr), right(nullptr) {}
+    Node() : key(0), height(0), left(nullptr), right(nullptr) {}
     inline static long long bytes_allocated = 0;
 
     // Count every Node allocation, then delegate to the global allocator.

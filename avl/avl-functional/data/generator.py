@@ -101,10 +101,14 @@ def insertOrdered(init, step):
 #print_data(benchmarksForTree(832039, 64, True), "data/benchmark_20.txt")
 #print_data(benchmarksForTree(24157816, 64, True), "data/benchmark_insert.txt")
 
-"""
-for t in range(15, 26):
-    print(f"({t}, \"data/range_{pow(2, t) - 1}.txt\");")
-    print_data(benchmarksForTree(pow(2, t) - 1, 64, True), f"data/range_{pow(2, t) - 1}.txt")
+
+ranges = [28656, 46367, 75024, 121392, 196417, 317810, 514228, 832039, 1346268, 2178308, 3524577, 5702886, 9227464, 14930351, 24157816]
+
+for t in range(15):
+    print(f"({t}, \"data/range_{ranges[t]}.txt\");")
+    print_data(benchmarksForTree(ranges[t], 64, True), f"data/range_{ranges[t]}.txt")
+
+
 
 """
 print_data(insertOrdered(0, -64), "./data/insert_min.txt")
@@ -140,3 +144,4 @@ print_data(deleteRandom(14930351, 64), f"./data/delete_rand{34}.txt")
 
 print_data(insertRandom(24157816, 64), f"./data/insert_rand{35}.txt")
 print_data(deleteRandom(24157816, 64), f"./data/delete_rand{35}.txt")
+"""

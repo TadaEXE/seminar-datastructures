@@ -1,0 +1,73 @@
+import json
+import re
+import os
+from matplotlib import pyplot as plt
+
+def getNodesUnbalanced(n):
+    nodes = [0, 1]
+    for i in range(1, n):
+        nodes += [nodes[i] + nodes[i - 1] + 1]
+    return nodes
+
+pref = "./"
+paths = [
+    "../avl-imperative/amortized_cpp_recursive.txt",
+    "../avl-imperative/amortized_cpp_iterative.txt",
+    "../avl-imperative/amortized_cpp_vector.txt",
+    "../avl-imperative/amortized_cpp_compact.txt",
+]
+delKey = "d_amort_"
+insKey = "i_amort_"
+data = []
+
+for path in paths:
+    f = open(pref + path)
+    content = f.read()
+    content = content.replace("(", "[").replace(")", "]")
+    content = "{" + content[:-2] + "}"
+    f.close()
+    #print(content)
+    data += [json.loads(content)]
+
+print(type(data[0]))
+# average 5 reps, skip zeros (OCaml sometimes has 0.0 as failed measurement)
+def avg(values, step, offset):
+    vals = [values[i][1] for i in range(offset, len(values), step) if values[i][0] > 0]
+    return sum(vals) / len(vals) if vals else 0
+
+depths = range(50000, 1000001, 50000)
+fact = 1
+
+insRec = [avg(data[0][f"{insKey}{n}"], 2, 0) * fact for n in depths]
+insIt = [avg(data[1][f"{insKey}{n}"], 1, 0) * fact for n in depths]
+insVec = [avg(data[2][f"{insKey}{n}"], 1, 0) * fact for n in depths]
+insComp = [avg(data[3][f"{insKey}{n}"], 2, 0) * fact for n in depths]
+delRec = [avg(data[0][f"{delKey}{n}"], 2, 1) * fact for n in depths]
+delIt = [avg(data[1][f"{delKey}{n}"], 2, 1) * fact for n in depths]
+delVec = [avg(data[2][f"{delKey}{n}"], 2, 1) * fact for n in depths]
+delComp = [avg(data[3][f"{delKey}{n}"], 2, 1) * fact for n in depths]
+
+# --- plot ---
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+fig.suptitle("AVL: Performance of c++ variants")
+
+ax1.set_title("Insert: Average memory allocated by variant")
+ax1.plot(depths, insRec,   "r--", label="Recursive")
+ax1.plot(depths, insIt, "b--", label="Iterative")
+ax1.plot(depths, insVec,   "g--", label="Vector")
+ax1.plot(depths, insComp, "y--", label="Compact")
+ax1.set_xlabel("#operations")
+ax1.set_ylabel("memory (B)")
+ax1.legend()
+
+ax2.set_title("Delete: Average memory allocated by variant")
+ax2.plot(depths, delRec,   "r--", label="Recursive")
+ax2.plot(depths, delIt, "b--", label="Iterative")
+ax2.plot(depths, delVec,   "g--", label="Vector")
+ax2.plot(depths, delComp, "y--", label="Compact")
+ax2.set_xlabel("#operations")
+ax2.set_ylabel("memory (B)")
+ax2.legend()
+
+plt.tight_layout()
+plt.show()

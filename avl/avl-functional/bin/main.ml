@@ -47,7 +47,7 @@ let rec benchmark tree ic n =
   if n <= 0 then let _ = close_in ic in []
   else let actions = try read_segment ic with End_of_file -> [] in
     if actions == [] then []
-    else let v = latency1 100L (execute_actions actions) tree in
+    else let v = latency1 50L (execute_actions actions) tree in
     let wc = (match  v with (s, t1 :: ts) :: vs -> t1 | v -> (make 0L)) in 
     wc :: benchmark (execute_actions actions tree) ic (n - 1)
 
@@ -72,12 +72,12 @@ let benchmark_balanced n path oc =
   let res = benchmark tree1 ic 100 in
   print_result ("Balanced_" ^ string_of_int n) res oc
   
-let benchmark_unbalanced n path oc =  
+let benchmark_unbalanced n path oc text =  
     let tree2 = spaced_tree 64 n in
     let _ = print_endline ("Constructed tree of size " ^ string_of_int (size tree2) ^ " with max " ^ string_of_int  (max tree2)) in
     let ic = open_in path in 
     let res = benchmark tree2 ic 100 in
-    print_result ("Unbalanced_" ^ string_of_int n) res oc
+    print_result (text ^ string_of_int n) res oc
 
 let balanced_benchmarks = [|
 (15, "data/range_32767.txt");
@@ -93,6 +93,24 @@ let balanced_benchmarks = [|
 (25, "data/range_33554431.txt");
 |]
 
+let unbalanced_benchmarks = [|
+(*(21, "data/range_28656.txt");
+(22, "data/range_46367.txt");
+(23, "data/range_75024.txt");
+(24, "data/range_121392.txt");
+(25, "data/range_196417.txt");
+(26, "data/range_317810.txt");
+(27, "data/range_514228.txt");
+(28, "data/range_832039.txt");
+(29, "data/range_1346268.txt");
+(30, "data/range_2178308.txt");
+(31, "data/range_3524577.txt");
+(32, "data/range_5702886.txt");
+(33, "data/range_9227464.txt");
+(34, "data/range_14930351.txt");*)
+(35, "data/range_24157816.txt");
+|]
+
 (*
 let unbalanced_benchmarks = [|
   (21, "./data/benchmark_15.txt"); 
@@ -100,13 +118,6 @@ let unbalanced_benchmarks = [|
   (34, "./data/benchmark_24.txt")|]
 *)
 
-let unbalanced_benchmarks = [|
-  (21, "./data/delete_max31.txt"); 
-  (22, "./data/delete_max32.txt");
-  (23, "./data/delete_max33.txt");
-  (24, "./data/delete_max34.txt");
-  (25, "./data/delete_max35.txt");
-  |]
 
 (*let benchmark_all = let oc = open_out "./data/results_long1.txt" in
   let _= Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks in
@@ -114,13 +125,19 @@ let unbalanced_benchmarks = [|
 
 (* Random operations on balanced tree *)
 
-(*
-let benchmark_bal = let oc = open_out "./data/results_ordered.txt" in
-  Array.iter (fun (n, path) -> benchmark_balanced n path oc)  balanced_benchmarks
-*)
 
-let benchmark_unbal = let oc = open_out "./data/results_rand_1.txt" in
-  Array.iter (fun (n, path) -> benchmark_balanced n path oc)  unbalanced_benchmarks
+let benchmark_bal = let oc = open_out "./data/results_unbalanced_1.txt" in
+  Array.iter (fun (n, path) -> benchmark_unbalanced n path oc "Unbalanced_")  unbalanced_benchmarks
+
+
+(*
+let benchmark_unbal = let oc = open_out "./data/results_rand.txt" in
+  let _ = Array.iter (fun (n, path) -> benchmark_unbalanced n path oc "i_worst")  benchmarks_max_ins in
+  let _ = Array.iter (fun (n, path) -> benchmark_unbalanced n path oc "i_avg")  benchmarks_rand_ins in
+  let _ = Array.iter (fun (n, path) -> benchmark_unbalanced n path oc "d_worst")  benchmarks_min_del in
+  let _ = Array.iter (fun (n, path) -> benchmark_unbalanced n path oc "d_avg")  benchmarks_rand_del in
+  ()
+  *)
 
 
 

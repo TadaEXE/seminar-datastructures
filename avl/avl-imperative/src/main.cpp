@@ -7,6 +7,7 @@
 using namespace avl;
 
 int main() {
+    /*
     AvlVec* avl = (AvlVec*) makeBalanced(3, 2);
     for (int i = 0; i < avl->getNodes()->size(); i++) {
         std::cout << i << ": "<< avl->getNodes()->at(i).left << ", " << avl->getNodes()->at(i).right << "\n";
@@ -19,7 +20,13 @@ int main() {
         assert(avl->checkInv());
         avl->ins(x0 + i * step);
     }
-
+        */
+    std::cout << "Sizes: " << sizeof(Node) << ", " << INT_MAX << ", " << sizeof(size_t) << "\n";
+    std::cout << "Init: " << Node::bytes_allocated << ", " << CompactNode::bytes_allocated << "\n";
+    Node* node1 = new Node(3);
+    std::cout << "Init: " << Node::bytes_allocated << ", " << CompactNode::bytes_allocated << "\n";
+    CompactNode* node2 = new CompactNode(3);
+    std::cout << "Init: " << Node::bytes_allocated << ", " << CompactNode::bytes_allocated << "\n";
 }
 
 int tmp() {

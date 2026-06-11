@@ -1,9 +1,9 @@
 #include <cassert>
 #include <cstdint>
-#include <print>
 #include <random>
 #include <set>
 #include <vector>
+#include <iostream>
 
 #include "rbt.hpp"
 
@@ -56,17 +56,17 @@ int main() {
   assert(tree.insert(5));
   assert(tree.insert(1));
   validate(tree);
-  std::println("Inserts done");
+  std::cout << "Inserts done";
 
   assert(tree.find(20));
   assert(!tree.find(999));
-  std::println("finds done");
+  std::cout << "finds done";
 
   assert(!tree.insert(20));
   tree.remove(20);
   tree.remove(5);
   validate(tree);
-  std::println("removes done");
+  std::cout << "removes done";
 
   std::mt19937 rng(42069);
 
@@ -93,5 +93,5 @@ int main() {
     }
   }
   validate(tree);
-  std::println("random usage done");
+  std::cout << "random usage done";
 }

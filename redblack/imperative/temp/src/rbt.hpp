@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <utility>
 #include <vector>
+#include <cassert>
+#include <iostream>
 
 namespace rbt {
 
@@ -28,6 +30,9 @@ template <NodeData D> struct Node {
 
 template <NodeData D> class Tree {
 public:
+  Node<D> _nil{};
+  Node<D> *_root = nullptr;
+
   Tree() {
     _nil.color = Node<D>::Color::Black;
     _nil.parent = &_nil;
@@ -47,6 +52,10 @@ public:
   Node<D> *nil() { return &_nil; }
 
 public:
+  void free() {
+    freeRec(_root);
+  }
+
   bool insert(D data) {
     auto *node = new Node<D>{
         .parent = nullptr,
@@ -89,7 +98,6 @@ public:
 
   bool remove(const D &data) {
     auto *z = find_node(data);
-
     if (z == &_nil) {
       return false;
     }
@@ -98,7 +106,6 @@ public:
     auto y_original_color = y->color;
 
     Node<D> *x = nullptr;
-
     if (z->left == &_nil) {
       x = z->right;
       transplant(z, z->right);
@@ -130,6 +137,7 @@ public:
 
       y->color = z->color;
     }
+    if (data == 921407) std::cout << "A2!!!\n";
 
     delete z;
 
@@ -160,12 +168,13 @@ public:
     return node;
   }
 
-  void inorder(Node<D> *node, std::vector<D> &out) {
+  void inorder(Node<D> *node, std::vector<D> *out) {
     if (node == &_nil)
       return;
-
     inorder(node->left, out);
-    out.push_back(node->data);
+    if (node->data == 12470) std::cout << "Start: " << node << ", " << _root << ", " << _root->left << ", " << out->data() << ", " << out->size() << "\n";
+    out->push_back(node->data);
+    if (node->data == 12470) std::cout << "End:   " << node << ", " << _root << ", " << _root->left << ", " << out->data() << ", " << out->size() << "\n";
     inorder(node->right, out);
   }
 
@@ -187,6 +196,13 @@ public:
   }
 
 private:
+  void freeRec(Node<D>* root) {
+    if (root == &_nil) return;
+    freeRec(root->left);
+    freeRec(root->right);
+    delete root;
+  }
+
   void rotate_left(Node<D> &root) {
     auto *pivot = root.right;
 
@@ -397,7 +413,6 @@ private:
 
   Node<D> *find_node(const D &data) const {
     auto *cur = _root;
-
     while (cur != &_nil) {
       if (data < cur->data) {
         cur = cur->left;
@@ -423,10 +438,6 @@ private:
 
     delete node;
   }
-
-private:
-  Node<D> _nil{};
-  Node<D> *_root = nullptr;
 };
 
 } // namespace rbt

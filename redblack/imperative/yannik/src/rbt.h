@@ -10,11 +10,43 @@ enum Color { Red, Black };
 template <typename T>
 class rbt
 {
-private:
+public:
     Color color;
     T mark;
     rbt<T>* left;
     rbt<T>* right;
+
+    rbt() : mark(T{}), color(Black), left(nullptr), right(nullptr) {}
+
+    bool empty = false;
+
+    inline static long long bytes_allocated = 0;
+
+    // Count every Node allocation, then delegate to the global allocator.
+    // We don't count deallocations since we only care about the total memory used at the end of the benchmark.
+    static void* operator new(std::size_t size) {
+        bytes_allocated += static_cast<long long>(size);
+        return ::operator new(size);
+    }
+
+    // Free memory normally. We do not decrease bytes_allocated because
+    // we measure total allocations, not currently live memory.
+    static void operator delete(void* ptr) noexcept {
+        ::operator delete(ptr);
+    }
+
+    void free() {
+        if (left != nullptr) {
+            left->free();
+            delete left;
+            left = nullptr;
+        }
+        if (right != nullptr) {
+            right->free();
+            delete right;
+            right = nullptr;
+        }
+    }
 
     void baliL() {
         if (left == nullptr) return;
@@ -209,7 +241,9 @@ private:
             right = new rbt<T>(c, Black);
             right->left = t3;
             right->right = t4;
-            right->right->color = Red;
+            if (right->right != nullptr) {
+                right->right->color = Red;
+            }
             right->baliR();
             color = Red;
             return;
@@ -252,7 +286,9 @@ private:
             mark = b;
             left = new rbt<T>(a, Black);
             left->left = t1;
-            left->left->color = Red;
+            if (left->left != nullptr) {
+                left->left->color = Red;
+            }
             left->right = t2;
             left->baliL();
             right = new rbt<T>(c, Black);
@@ -391,8 +427,6 @@ private:
         return lhs;
     }
 
-public:
-
     rbt(T mark, Color color = Black) {
         this->mark = mark;
         this->color = color;
@@ -401,6 +435,13 @@ public:
     }
 
     void insert(T x) {
+        if (empty) {
+            mark = x;
+            color = Black;
+            left = right = nullptr;
+            empty = false;
+            return;
+        }
         ins(x);
         color = Black;
         return;
@@ -413,6 +454,9 @@ public:
             left = result->left;
             right = result->right;
             color = Black;
+        } else {
+            empty = true;
+            left = right = nullptr;
         }
         return;
     }

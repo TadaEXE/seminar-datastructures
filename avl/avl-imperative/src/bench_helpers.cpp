@@ -3,28 +3,28 @@
 // build a left-heavy AVL tree
 // at every node: left subtree has depth-1, right subtree has depth-2
 // so the leftmost path is much longer than the rightmost
-Node* buildUnbalancedHelperBasic(int& nextKey, int step, int depth) {
-    if (depth <= 0) return nullptr;
-    Node* left = buildUnbalancedHelperBasic(nextKey, step, depth - 1);
+Node* buildUnbalancedHelperBasic(int& nextKey, int step, int depth, Node* def) {
+    if (depth <= 0) return def;
+    Node* left = buildUnbalancedHelperBasic(nextKey, step, depth - 1, def);
     Node* root = new Node(nextKey);
     nextKey += step;
     root->left  = left;
-    root->right = buildUnbalancedHelperBasic(nextKey, step, depth - 2);
+    root->right = buildUnbalancedHelperBasic(nextKey, step, depth - 2, def);
     root->height = 1 + std::max(height(root->left), height(root->right));
     return root;
 }
 
-Node* buildUnbalancedBasic(int step, int depth) {
+Node* buildUnbalancedBasic(int step, int depth, Node* def) {
     int nextKey = step; // start from step so all keys are multiples of step
-    return buildUnbalancedHelperBasic(nextKey, step, depth);
+    return buildUnbalancedHelperBasic(nextKey, step, depth, def);
 }
 
-Node* buildBalancedBasic(int minKey, int step, int depth) {
-    if (depth <= 0) return nullptr;
+Node* buildBalancedBasic(int minKey, int step, int depth, Node* def) {
+    if (depth <= 0) return def;
     int rootKey = minKey + (int)(1LL << (depth - 1)) * step;
     Node* root = new Node(rootKey);
-    root->left  = buildBalancedBasic(minKey,   step, depth - 1);
-    root->right = buildBalancedBasic(rootKey,  step, depth - 1);
+    root->left  = buildBalancedBasic(minKey,   step, depth - 1, def);
+    root->right = buildBalancedBasic(rootKey,  step, depth - 1, def);
     root->height = depth; // perfectly balanced: height = depth
     return root;
 }
@@ -94,9 +94,9 @@ int buildBalancedVector(int minKey, int step, int depth, std::vector<VectorNode>
 
 Avl* makeBalanced(int depth, int version) {
     if (version == 0) {
-        return new AvlRec(buildBalancedBasic(0, 64, depth));
+        return new AvlRec(buildBalancedBasic(0, 64, depth, nullptr));
     } else if (version == 1) {
-        return new AvlIt(buildBalancedBasic(0, 64, depth));
+        return new AvlIt(buildBalancedBasic(0, 64, depth, nullptr));
     } else if (version == 2) {
         //This leaks the memory of an empty vector, but whatever
         auto avl = new AvlVec();
@@ -105,39 +105,44 @@ Avl* makeBalanced(int depth, int version) {
         return avl;
     } else if (version == 3) {
         return new AvlComp(buildBalancedCompact(0, 64, depth), depth);
+    } else if (version == 4) {
+        Node* nil = new Node();
+        return new AvlDum(buildBalancedBasic(0, 64, depth, nil), nil);
     }
     return nullptr;
 }
 
 Avl* makeUnbalanced(int depth, int version) {
     if (version == 0) {
-        return new AvlRec(buildUnbalancedBasic(64, depth));
+        return new AvlRec(buildUnbalancedBasic(64, depth, nullptr));
     } else if (version == 1) {
-        return new AvlIt(buildUnbalancedBasic(64, depth));
+        return new AvlIt(buildUnbalancedBasic(64, depth, nullptr));
     } else if (version == 2) {
-        //This leaks the memory of an empty vector, but whatever
         auto avl = new AvlVec();
         buildUnbalancedVector(64, depth, avl->getNodes());
         avl->setSize();
         return avl;
     } else if (version == 3) {
         return new AvlComp(buildUnbalancedCompact(64, depth), depth);
+    } else if (version == 4) {
+        Node* nil = new Node();
+        return new AvlDum(buildUnbalancedBasic(64, depth, nil), nil);
     }
     return nullptr;
 }
 
-std::vector<int> getFullDeletes(int n) {
+std::vector<long> getFullDeletes(long n) {
     std::srand(0);
-    std::vector<int> inserts;
-    std::vector<int> insertsTmp;
-    std::vector<int> deletes;
-    for (int i = 0; i < n; i++) {
-        int random_value = std::rand() % (n * 20);
+    std::vector<long> inserts;
+    std::vector<long> insertsTmp;
+    std::vector<long> deletes;
+    for (size_t i = 0; i < n; i++) {
+        long random_value = std::rand() % (n * 20);
         inserts.push_back(random_value);
         insertsTmp.push_back(random_value);
     }
-    for (int i = 0; i < insertsTmp.size(); i++) {
-        int random_value = std::rand() % insertsTmp.size();
+    for (size_t i = 0; i < insertsTmp.size(); i++) {
+        long random_value = std::rand() % insertsTmp.size();
         deletes.push_back(insertsTmp[random_value]);
         insertsTmp.erase(insertsTmp.begin() + random_value);
         if (insertsTmp.empty()) break;
@@ -145,14 +150,12 @@ std::vector<int> getFullDeletes(int n) {
     return deletes;
 }
 
-std::vector<int> getFullInserts(int n) {
+std::vector<long> getFullInserts(long n) {
     std::srand(0);
-    std::vector<int> inserts;
-    for (int i = 0; i < n; i++) {
+    std::vector<long> inserts;
+    for (size_t i = 0; i < n; i++) {
         int random_value = std::rand() % (n * 20);
         inserts.push_back(random_value);
     }
     return inserts;
 }
-
-

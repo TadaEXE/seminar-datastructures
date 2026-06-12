@@ -3,10 +3,16 @@
 
 namespace avl {
 
-class AvlIt: public Avl {
+class AvlDum: public Avl {
     public:
-        AvlIt() { root = nullptr; };
-        AvlIt(Node* root) { this->root = root; };
+        AvlDum() { 
+            nil = new Node();
+            root = nil; 
+        };
+        AvlDum(Node* root, Node* nil) { 
+            this->root = root; 
+            this->nil = nil;
+        };
         void ins(long x);
         void del(long x);
         bool find(long x);
@@ -22,6 +28,7 @@ class AvlIt: public Avl {
 
     private:
         Node* root;
+        Node* nil;
         bool balance(Node* current, Node* parent);
 };
 

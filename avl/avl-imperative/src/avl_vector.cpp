@@ -4,28 +4,27 @@
 #include <iostream>
 #include <assert.h>
 
-#define HEIGHT(index, nodes) (index >= 0 ? nodes[index].height : 0)
-#define CALC_HEIGHT(tree) (std::max(tree.left != nullptr ? tree->left->height : 0, tree->right != nullptr ? tree->right->height : 0) + 1) 
+#define HEIGHT(index, nodes) (index != SIZE_MAX ? nodes[index].height : 0)
 
 using namespace avl;
 
-void AvlVec::addNode(int key) {
-    std::size_t old_cap = nodes.capacity();
+void AvlVec::addNode(long key) {
+    size_t old_cap = nodes.capacity();
     nodes.resize(nodes.size() + 1);
-    std::size_t new_cap = nodes.capacity();
+    size_t new_cap = nodes.capacity();
     if (new_cap > old_cap)
         VectorNode::bytes_allocated += static_cast<long long>((new_cap - old_cap) * sizeof(VectorNode));
     nodes[nodes.size() - 1].height = 1;
     nodes[nodes.size() - 1].key = key;
-    nodes[nodes.size() - 1].left = -1;
-    nodes[nodes.size() - 1].right = -1;
+    nodes[nodes.size() - 1].left = SIZE_MAX;
+    nodes[nodes.size() - 1].right = SIZE_MAX;
     size++;
 }
 
-int AvlVec::balL1(int current) {
+size_t AvlVec::balL1(size_t current) {
     //std::cout << HEIGHT(current) << ", " << HEIGHT(current->left) << ", " << HEIGHT(current->right) << ", " << HEIGHT(current->left->left) << ", " << HEIGHT(current->left->right) << "\n";
-    int left = nodes[current].left;
-    int heightB = HEIGHT(nodes[left].right, nodes);
+    size_t left = nodes[current].left;
+    size_t heightB = HEIGHT(nodes[left].right, nodes);
     nodes[current].left = nodes[left].right;
     //if (nodes[left].right > 0) nodes[nodes[left].right].parent = current;
     nodes[left].right = current;
@@ -36,9 +35,9 @@ int AvlVec::balL1(int current) {
     return left;
 }
 
-int AvlVec::balL2(int current) {
-    int left = nodes[current].left;
-    int treeB = nodes[left].right;
+size_t AvlVec::balL2(size_t current) {
+    size_t left = nodes[current].left;
+    size_t treeB = nodes[left].right;
     nodes[left].right = nodes[treeB].left;
     nodes[current].left = nodes[treeB].right;
     nodes[treeB].left = left;
@@ -49,9 +48,9 @@ int AvlVec::balL2(int current) {
     return treeB;
 }
 
-int AvlVec::balR1(int current) {
-    int right = nodes[current].right;
-    int heightB = HEIGHT(nodes[right].left, nodes);
+size_t AvlVec::balR1(size_t current) {
+    size_t right = nodes[current].right;
+    size_t heightB = HEIGHT(nodes[right].left, nodes);
     nodes[current].right = nodes[right].left;
     nodes[right].left = current;
     nodes[current].height = heightB + 1;
@@ -59,9 +58,9 @@ int AvlVec::balR1(int current) {
     return right;
 }
 
-int AvlVec::balR2(int current) {
-    int right = nodes[current].right;
-    int treeB = nodes[right].left;
+size_t AvlVec::balR2(size_t current) {
+    size_t right = nodes[current].right;
+    size_t treeB = nodes[right].left;
     nodes[right].left = nodes[treeB].right;
     nodes[current].right = nodes[treeB].left;
     nodes[treeB].left = current;
@@ -73,11 +72,11 @@ int AvlVec::balR2(int current) {
     return treeB;
 }
 
-bool AvlVec::balance(int current, int parent) {
+bool AvlVec::balance(size_t current, size_t parent) {
     int leftHeight = HEIGHT(nodes[current].left, nodes);
     int rightHeight = HEIGHT(nodes[current].right, nodes);
     //std::cout << leftHeight << ", " << rightHeight << "\n";
-    int res = -1;
+    size_t res = SIZE_MAX;
     //Save wether the height of the tree changed because of the rebalance
     bool changed;
     if (leftHeight > rightHeight && HEIGHT(nodes[nodes[current].left].left, nodes) >= 
@@ -97,17 +96,17 @@ bool AvlVec::balance(int current, int parent) {
         changed = true;
         res = balR2(current);
     }
-    if (parent == -1) this->root = res;
+    if (parent == SIZE_MAX) this->root = res;
     else if (nodes[res].key < nodes[parent].key) nodes[parent].left = res; 
     else nodes[parent].right = res; 
     return changed;
 }
 
 
-void AvlVec::ins(int x) {
-    std::vector<int> trace;
-    int current = this->root;
-    if (current == -1) {
+void AvlVec::ins(long x) {
+    std::vector<size_t> trace;
+    size_t current = this->root;
+    if (current == SIZE_MAX) {
         addNode(x);
         this->root = 0;
         return;
@@ -115,7 +114,7 @@ void AvlVec::ins(int x) {
     trace.resize(nodes[current].height);
     int traceSize = 0;
     //Map out the path from root to insertion spot of x
-    while (current != -1) {
+    while (current != SIZE_MAX) {
         trace[traceSize++] = current;
         if (nodes[current].key == x) {
             return;
@@ -125,19 +124,19 @@ void AvlVec::ins(int x) {
             current = nodes[current].right;
         }
     }
-    int placeToInsert = trace[traceSize - 1];
+    size_t placeToInsert = trace[traceSize - 1];
     addNode(x);
     if (x < nodes[placeToInsert].key) {
-        nodes[placeToInsert].left = nodes.size() -1;
+        nodes[placeToInsert].left = nodes.size() - 1;
     } else {
-        nodes[placeToInsert].right = nodes.size() -1;
+        nodes[placeToInsert].right = nodes.size() - 1;
     }
     //Assumes height of one child has changed, 
     //returns as soon as height does not change anymore
     for (int i = traceSize - 1; i >= 0; i--) {
         current = trace[i];
-        int leftHeight = nodes[current].left != -1 ? nodes[nodes[current].left].height : 0;
-        int rightHeight = nodes[current].right != -1 ? nodes[nodes[current].right].height : 0;
+        int leftHeight = nodes[current].left != SIZE_MAX ? nodes[nodes[current].left].height : 0;
+        int rightHeight = nodes[current].right != SIZE_MAX ? nodes[nodes[current].right].height : 0;
 
         if (leftHeight == rightHeight) {
             //The current node has become balanced
@@ -146,26 +145,26 @@ void AvlVec::ins(int x) {
             //The current node was balanced and is now imbalanced 
             nodes[current].height++;
         } else {
-            bool changed = balance(current, i > 0 ? trace[i - 1] : -1);
+            bool changed = balance(current, i > 0 ? trace[i - 1] : SIZE_MAX);
             //The rebalancing reduced the height to the value before inserting
             if (changed) return;
         }
     }
 }
 
-void AvlVec::del(int x) {
-    if (this->root == -1) return;
-    std::vector<int> trace;
-    int current = this->root;
-    if (current != -1) trace.resize(nodes[current].height);
+void AvlVec::del(long x) {
+    if (this->root == SIZE_MAX) return;
+    std::vector<size_t> trace;
+    size_t current = this->root;
+    if (current != SIZE_MAX) trace.resize(nodes[current].height);
     int traceSize = 0;
     //The node with key x. The key is replaced by the predecesor
-    int replaced = -1;
+    size_t replaced = SIZE_MAX;
     //Map out the path from root to the deleted node
-    while (current != -1) {
+    while (current != SIZE_MAX) {
         trace[traceSize++] = current;
         //The current node has key x
-        if (replaced != -1) {
+        if (replaced != SIZE_MAX) {
             current = nodes[current].right;
         } else if (nodes[current].key == x) {
             replaced = current;
@@ -177,7 +176,7 @@ void AvlVec::del(int x) {
         }
     }
     //The AVL tree did not contain the key x
-    if (replaced == -1) return;
+    if (replaced == SIZE_MAX) return;
     //If the deleted node does not have a left subtree, it is replaced by its right subtree 
     if (replaced == trace[traceSize - 1]) {
         //std::cout << "A\n";
@@ -205,7 +204,7 @@ void AvlVec::del(int x) {
             //Height changed and node is now balanced
             nodes[current].height --;
         } else {
-            bool changed = balance(current, i > 0 ? trace[i - 1] : -1); 
+            bool changed = balance(current, i > 0 ? trace[i - 1] : SIZE_MAX); 
             //The height is the same as before the deletion
             if (!changed) break; 
         }
@@ -213,9 +212,9 @@ void AvlVec::del(int x) {
     compress();
 }
 
-bool AvlVec::find(int x) {
-    int current = root;
-    while (current != -1) {
+bool AvlVec::find(long x) {
+    size_t current = root;
+    while (current != SIZE_MAX) {
         if (x == nodes[current].key) return true;
         else if (x < nodes[current].key) current = nodes[current].left;
         else current = nodes[current].right;
@@ -225,10 +224,11 @@ bool AvlVec::find(int x) {
 
 void AvlVec::compress() {
     if (size < nodes.size() / 2) {
-        if (root == -1) nodes.clear();
-        int index = -1;
+        if (root == SIZE_MAX) nodes.clear();
+        //index has to be unsigned, so used max value and force overflow
+        size_t index = SIZE_MAX;
         //Relocate all nodes that exceed the size after compression 
-        for (int i = size; i < nodes.size(); i++) {
+        for (size_t i = size; i < nodes.size(); i++) {
             if (nodes[i].height <= 0) continue;
             //Move node to the first free location in the array
             while (nodes[++index].height > 0) { continue; }
@@ -237,12 +237,12 @@ void AvlVec::compress() {
             //Save new location of node
             nodes[i].left = index;
         }
-        assert(index <= size);
-        for (int i = 0; i < size; i++) {
-            if (nodes[i].left >= size) {
+        //assert(index <= size && index != SIZE_MAX);
+        for (size_t i = 0; i < size; i++) {
+            if (nodes[i].left >= size && nodes[i].left != SIZE_MAX) {
                 nodes[i].left = nodes[nodes[i].left].left;
             } 
-            if (nodes[i].right >= size) {
+            if (nodes[i].right >= size&& nodes[i].right != SIZE_MAX) {
                 nodes[i].right = nodes[nodes[i].right].left;
             }
         }
@@ -252,15 +252,15 @@ void AvlVec::compress() {
 }
 
 bool AvlVec::checkInv() {
-    if (this->root >= (int) nodes.size()) {
+    if (this->root >= nodes.size() && this->root != SIZE_MAX) {
         std::cout << "Invalid root: " << root << ", " << nodes.size() << "\n";
         return false;
     }
-    int nodeCount = 0;
-    for (int i = 0; i < nodes.size(); i++) {
+    size_t nodeCount = 0;
+    for (size_t i = 0; i < nodes.size(); i++) {
         if (nodes[i].height > 0) {
             nodeCount++;
-            if (nodes[i].left >= nodes.size() && nodes[i].left != -1 || nodes[i].right >= nodes.size() && nodes[i].right != -1) {
+            if (nodes[i].left >= nodes.size() && nodes[i].left != SIZE_MAX || nodes[i].right >= nodes.size() && nodes[i].right != SIZE_MAX) {
                 std::cout << "Out of bounds: " << i << ", " << nodes[i].left << ", " << nodes[i].right << ", " << nodes.size() << "\n";
                 return false;
             }
@@ -272,8 +272,8 @@ bool AvlVec::checkInv() {
                 std::cout << "Tree unbalanced\n";
                 return false;
             }
-            if (nodes[i].left != -1 && nodes[nodes[i].left].key >= nodes[i].key || 
-                nodes[i].right != -1 && nodes[nodes[i].right].key <= nodes[i].key) {
+            if (nodes[i].left != SIZE_MAX && nodes[nodes[i].left].key >= nodes[i].key || 
+                nodes[i].right != SIZE_MAX && nodes[nodes[i].right].key <= nodes[i].key) {
                 std::cout << "Invalid search tree\n";
                 return false;
             }
@@ -296,7 +296,7 @@ void AvlVec::printLimit() {
 
 void AvlVec::free() {
     nodes = std::vector<VectorNode>();
-    root = -1;
+    root = SIZE_MAX;
     size = 0;
 }
 
@@ -304,16 +304,16 @@ std::vector<VectorNode>* AvlVec::getNodes() {
     return &nodes;
 }
 
-int AvlVec::min() {
-    if (root == -1) return 0;
-    int t = root;
-    while (nodes[t].left != -1) t = nodes[t].left;
+long AvlVec::min() {
+    if (root == SIZE_MAX) return 0;
+    size_t t = root;
+    while (nodes[t].left != SIZE_MAX) t = nodes[t].left;
     return nodes[t].key;
 }
 
-int AvlVec::max() {
-    if (root == -1) return 0;
-    int t = root;
-    while (nodes[t].right != -1) t = nodes[t].right;
+long AvlVec::max() {
+    if (root == SIZE_MAX) return 0;
+    size_t t = root;
+    while (nodes[t].right != SIZE_MAX) t = nodes[t].right;
     return nodes[t].key;
 }

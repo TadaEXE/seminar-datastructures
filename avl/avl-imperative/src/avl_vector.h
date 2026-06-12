@@ -1,13 +1,14 @@
 #include "avl.h"
 #include <iostream>
 #include <vector>
+#include "stdint.h"
 
 class VectorNode {
     public:
-        int key;
+        long key;
         int height;
-        int left;
-        int right;
+        size_t left;
+        size_t right;
 
         // Count every Node allocation, then delegate to the global allocator.
         // Used for the allocation benchmark.
@@ -19,9 +20,9 @@ namespace avl {
 class AvlVec: public Avl {
     public:
         AvlVec() {};
-        void ins(int x);
-        void del(int x);
-        bool find(int x);
+        void ins(long x);
+        void del(long x);
+        bool find(long x);
         void free();
         void compareSizes();
 
@@ -34,21 +35,21 @@ class AvlVec: public Avl {
             this->root = 0;
         }
 
-        int min();
-        int max();
+        long min();
+        long max();
 
     private:
         std::vector<VectorNode> nodes;
-        int size = 0;
-        int root = -1;
-        bool balance(int current, int parent);
+        size_t size = 0;
+        size_t root = SIZE_MAX;
+        bool balance(size_t current, size_t parent);
         void compress();
-        void addNode(int x);
+        void addNode(long x);
 
-        int balL1(int current);
-        int balL2(int current);
-        int balR1(int current);
-        int balR2(int current);
+        size_t balL1(size_t current);
+        size_t balL2(size_t current);
+        size_t balR1(size_t current);
+        size_t balR2(size_t current);
 };
 
 }

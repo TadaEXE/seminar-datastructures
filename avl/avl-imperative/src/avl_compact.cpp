@@ -64,7 +64,7 @@ uint64_t AvlComp::balR2(uint64_t current) {
     return (uint64_t) nodeB;
 }
 
-void AvlComp::ins(int x) {
+void AvlComp::ins(long x) {
     std::vector<uint64_t> trace;
     uint64_t current = this->root;
     if (current == 0) {
@@ -163,7 +163,7 @@ void AvlComp::ins(int x) {
     }
 }
 
-void AvlComp::del(int x) {
+void AvlComp::del(long x) {
     if (this->root == 0) return;
     std::vector<uint64_t> trace;
     uint64_t current = this->root;
@@ -278,7 +278,7 @@ void AvlComp::del(int x) {
     }
 }
 
-bool AvlComp::find(int x) {
+bool AvlComp::find(long x) {
     CompactNode* current = CLEAN(root);
     while (current != nullptr) {
         if (x == current->key) return true;
@@ -363,13 +363,13 @@ void AvlComp::free() {
     this->height = 0;
 }
 
-int AvlComp::min() {
+long AvlComp::min() {
     CompactNode* t = CLEAN(root);
     while(t->left) t = CLEAN(t->left);
     return t->key;
 }
 
-int AvlComp::max() {
+long AvlComp::max() {
     CompactNode* t = CLEAN(root);
     while(t->right) t = CLEAN(t->right);
     return t->key;

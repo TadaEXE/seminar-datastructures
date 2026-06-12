@@ -91,26 +91,26 @@ Node* AvlRec::balR(Node* z) {
     }
 }
 
-bool AvlRec::find(int key) {
+bool AvlRec::find(long key) {
     return search(root, key);
 }
 
 // search for a key in the tree, standard binary search tree search
 // if found return true, if not found return false
 // if key is less than current node, go left, if greater go right
-bool AvlRec::search(Node* n, int key) {
+bool AvlRec::search(Node* n, long key) {
     if (n == nullptr) return false;
     if (key == n->key) return true;
     if (key < n->key) return search(n->left, key);
     return search(n->right, key);
 }
 
-void AvlRec::ins(int key) {
+void AvlRec::ins(long key) {
     root = insert(root, key);
 }
 
 // go left -> balL, go right -> balR
-Node* AvlRec::insert(Node* n, int key) {
+Node* AvlRec::insert(Node* n, long key) {
     if (n == nullptr) return new Node(key);
 
     if (key < n->key) {
@@ -129,9 +129,9 @@ Node* AvlRec::insert(Node* n, int key) {
 // if right child is null, then current node is max, return left child as remaining tree
 // else go right and keep looking for max, then balL to fix the tree
 // returns pair of (remaining tree after removing max, max key)
-std::pair<Node*, int> AvlRec::split_max(Node* t) {
+std::pair<Node*, long> AvlRec::split_max(Node* t) {
     if (t->right == nullptr) {
-        int maxKey = t->key;
+        long maxKey = t->key;
         Node* remaining = t->left;
         delete t;
         return {remaining, maxKey};
@@ -141,12 +141,12 @@ std::pair<Node*, int> AvlRec::split_max(Node* t) {
     return {balL(t), maxKey};
 }
 
-void AvlRec::del(int key) {
+void AvlRec::del(long key) {
     root = deleteNode(root, key);
 }
 
 // opposite of insert: left shrinks -> balR, right shrinks -> balL
-Node* AvlRec::deleteNode(Node* n, int key) {
+Node* AvlRec::deleteNode(Node* n, long key) {
     if (n == nullptr) return nullptr;
 
     if (key < n->key) {
@@ -188,7 +188,7 @@ void inorder(Node* n) {
 }
 
 void freeTree(Node* n) {
-    if (n == nullptr) return;
+    if (n == nullptr || n->height == 0) return;
     freeTree(n->left);
     freeTree(n->right);
     delete n;
@@ -221,13 +221,13 @@ bool search_tree_inv(Node* n, long long min, long long max) {
         && search_tree_inv(n->right, n->key, max);
 }
 
-int AvlRec::min() {
+long AvlRec::min() {
     Node* t = root;
     while (t->left) t = t->left;
     return t->key;
 }
 
-int AvlRec::max() {
+long AvlRec::max() {
     Node* t = root;
     while (t->right) t = t->right;
     return t->key;

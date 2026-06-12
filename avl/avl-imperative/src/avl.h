@@ -4,12 +4,13 @@
 #include <new>
 
 struct Node {
-    int key;    // the value of the node
+    long key;    // the value of the node
     int height;
     Node* left;
     Node* right;
 
-    Node(int k) : key(k), height(1), left(nullptr), right(nullptr) {}
+    Node(long k) : key(k), height(1), left(nullptr), right(nullptr) {}
+    Node(long k, Node* nil) : key(k), height(1), left(nil), right(nil) {}
     Node() : key(0), height(0), left(nullptr), right(nullptr) {}
     inline static long long bytes_allocated = 0;
 
@@ -28,37 +29,37 @@ struct Node {
 
 class Avl {
     public:
-        virtual void ins(int x) = 0;
-        virtual void del(int x) = 0;
-        virtual bool find(int x) = 0;
+        virtual void ins(long x) = 0;
+        virtual void del(long x) = 0;
+        virtual bool find(long x) = 0;
         virtual bool checkInv() = 0;
         virtual void free() = 0;
-        virtual int min() = 0;
-        virtual int max() = 0;
+        virtual long min() = 0;
+        virtual long max() = 0;
 };
 
 class AvlRec : public Avl {
     public:
         AvlRec(Node* root) { this->root = root; }
         AvlRec() { this->root = nullptr; }
-        void ins(int x);
-        void del(int x);
-        bool find(int x);
+        void ins(long x);
+        void del(long x);
+        bool find(long x);
         bool checkInv();
         void free();
-        int min();
-        int max();
+        long min();
+        long max();
 
     private:
         Node* root;
 
-        Node* insert(Node* n, int key);
-        Node* deleteNode(Node* n, int key);
+        Node* insert(Node* n, long key);
+        Node* deleteNode(Node* n, long key);
         Node* balL(Node* z);
         Node* balR(Node* z);
-        bool search(Node* n, int x);
+        bool search(Node* n, long x);
 
-        std::pair<Node*, int> split_max(Node* t);
+        std::pair<Node*, long> split_max(Node* t);
 };
 
 void freeTree(Node* n);

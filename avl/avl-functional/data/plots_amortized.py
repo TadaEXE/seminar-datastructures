@@ -11,10 +11,13 @@ def getNodesUnbalanced(n):
 
 pref = "./"
 paths = [
-    "../avl-imperative/amortized_cpp_recursive.txt",
-    "../avl-imperative/amortized_cpp_iterative.txt",
-    "../avl-imperative/amortized_cpp_vector.txt",
-    "../avl-imperative/amortized_cpp_compact.txt",
+    "../avl-imperative/amortized_cpp_recursive_long.txt",
+    "../avl-imperative/amortized_cpp_iterative_long.txt",
+    "../avl-imperative/amortized_cpp_vector_long.txt",
+    "../avl-imperative/amortized_cpp_compact_long.txt",
+    "../../redblack/imperative/temp/amortized_cpp_opt_long.txt",
+    "../../redblack/imperative/temp/amortized_cpp_set_long.txt",
+    "../avl-imperative/amortized_cpp_dummy_long.txt",
 ]
 delKey = "d_amort_"
 insKey = "i_amort_"
@@ -32,7 +35,7 @@ for path in paths:
 print(type(data[0]))
 # average 5 reps, skip zeros (OCaml sometimes has 0.0 as failed measurement)
 def avg(values, step, offset):
-    vals = [values[i][1] for i in range(offset, len(values), step) if values[i][0] > 0]
+    vals = [values[i][0] for i in range(offset, len(values), step) if values[i][0] > 0]
     return sum(vals) / len(vals) if vals else 0
 
 depths = range(50000, 1000001, 50000)
@@ -42,10 +45,16 @@ insRec = [avg(data[0][f"{insKey}{n}"], 2, 0) * fact for n in depths]
 insIt = [avg(data[1][f"{insKey}{n}"], 1, 0) * fact for n in depths]
 insVec = [avg(data[2][f"{insKey}{n}"], 1, 0) * fact for n in depths]
 insComp = [avg(data[3][f"{insKey}{n}"], 2, 0) * fact for n in depths]
+insRB = [avg(data[4][f"{insKey}{n}"], 2, 0) * fact for n in depths]
+insSet = [avg(data[5][f"{insKey}{n}"], 2, 0) * fact for n in depths]
+insDum = [avg(data[6][f"{insKey}{n}"], 2, 0) * fact for n in depths]
 delRec = [avg(data[0][f"{delKey}{n}"], 2, 1) * fact for n in depths]
 delIt = [avg(data[1][f"{delKey}{n}"], 2, 1) * fact for n in depths]
 delVec = [avg(data[2][f"{delKey}{n}"], 2, 1) * fact for n in depths]
 delComp = [avg(data[3][f"{delKey}{n}"], 2, 1) * fact for n in depths]
+delRB = [avg(data[4][f"{delKey}{n}"], 2, 1) * fact for n in depths]
+delSet = [avg(data[5][f"{delKey}{n}"], 2, 1) * fact for n in depths]
+delDum = [avg(data[6][f"{delKey}{n}"], 2, 1) * fact for n in depths]
 
 # --- plot ---
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
@@ -56,6 +65,8 @@ ax1.plot(depths, insRec,   "r--", label="Recursive")
 ax1.plot(depths, insIt, "b--", label="Iterative")
 ax1.plot(depths, insVec,   "g--", label="Vector")
 ax1.plot(depths, insComp, "y--", label="Compact")
+ax1.plot(depths, insRB, "m--", label="RedBlack")
+ax1.plot(depths, insDum, "k--", label="Set")
 ax1.set_xlabel("#operations")
 ax1.set_ylabel("memory (B)")
 ax1.legend()
@@ -65,6 +76,8 @@ ax2.plot(depths, delRec,   "r--", label="Recursive")
 ax2.plot(depths, delIt, "b--", label="Iterative")
 ax2.plot(depths, delVec,   "g--", label="Vector")
 ax2.plot(depths, delComp, "y--", label="Compact")
+ax2.plot(depths, delRB, "m--", label="RedBlack")
+ax2.plot(depths, delDum, "k--", label="Set")
 ax2.set_xlabel("#operations")
 ax2.set_ylabel("memory (B)")
 ax2.legend()

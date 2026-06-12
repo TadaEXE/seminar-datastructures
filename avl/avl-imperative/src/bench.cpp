@@ -29,13 +29,13 @@ int treeMax(Node* t) {
 }
 
 void resetMem(int version) {
-    if (version == 0 || version == 1) Node::bytes_allocated = 0;
+    if (version == 0 || version == 1 || version == 4) Node::bytes_allocated = 0;
     else if (version == 2) VectorNode::bytes_allocated = 0;
     else CompactNode::bytes_allocated = 0;
 }
 
 long long getMem(int version) {
-    if (version == 0 || version == 1) return Node::bytes_allocated;
+    if (version == 0 || version == 1 || version == 4) return Node::bytes_allocated;
     else if (version == 2) return VectorNode::bytes_allocated;
     else return CompactNode::bytes_allocated;
 }
@@ -59,14 +59,15 @@ std::pair<std::vector<double>, std::vector<double>> benchInsertClear(int n, int 
     if (version == 0) avl = new AvlRec();
     else if (version == 1) avl = new AvlIt();
     else if (version == 2) avl = new AvlVec();
-    else avl = new AvlComp();
-    std::vector<int> inserts = getFullInserts(n);
+    else if (version == 3)  avl = new AvlComp();
+    else avl = new AvlDum();
+    std::vector<long> inserts = getFullInserts(n);
     std::vector<double> times;
     std::vector<double> memory;
     for (int t = 0; t < reps; t++) {
         resetMem(version);
         auto t0 = getTime();
-        for (int i = 0; i < (int)inserts.size(); i++) {
+        for (size_t i = 0; i < inserts.size(); i++) {
             avl->ins(inserts[i]);
         }
         times.push_back((getTime() - t0) / inserts.size());
@@ -82,16 +83,17 @@ std::pair<std::vector<double>, std::vector<double>> benchDeleteClear(int n, int 
     if (version == 0) avl = new AvlRec();
     else if (version == 1) avl = new AvlIt();
     else if (version == 2) avl = new AvlVec();
-    else avl = new AvlComp();
-    std::vector<int> inserts = getFullInserts(n);
-    std::vector<int> deletes = getFullDeletes(n);
+    else if (version == 3) avl = new AvlComp();
+    else avl = new AvlDum();
+    std::vector<long> inserts = getFullInserts(n);
+    std::vector<long> deletes = getFullDeletes(n);
     std::vector<double> times;
     std::vector<double> memory;
     for (int t = 0; t < reps; t++) {
-        for (int i = 0; i < (int)inserts.size(); i++) avl->ins(inserts[i]);
+        for (size_t i = 0; i < inserts.size(); i++) avl->ins(inserts[i]);
         resetMem(version);
         auto t0 = getTime();
-        for (int i = 0; i < (int)deletes.size(); i++) {
+        for (size_t i = 0; i < deletes.size(); i++) {
             avl->del(deletes[i]);
         }
         times.push_back((getTime() - t0) / deletes.size());
@@ -264,16 +266,19 @@ const char* UNBALANCED_PATHS[] = {
 
 int main() {
     // insert/delete comparison: AvlRec (standard pointer-based) vs OCaml functional
-    {
-        const int compVersion = 2;
-        std::ofstream compOut("amortized_cpp_vector.txt");
+    {   
+        
+        const int compVersion = 4;
+        std::ofstream compOut("amortized_cpp_dummy_long.txt");
 
         std::cout << "insert amortized cost...\n";
+        
         for (int n = 1; n <= 20; n++) {
             auto [times, bytes] = benchInsertClear(n * 50000, 10, compVersion);
             writeResult("i_amort_" + std::to_string(n * 50000), times, bytes, compOut);
             std::cout << "  n=" << n << "\n";
         }
+    
         std::cout << "delete amortized cost...\n";
         for (int n = 1; n <= 20; n++) {
             auto [times, bytes] = benchDeleteClear(n * 50000, 10, compVersion);
@@ -282,12 +287,13 @@ int main() {
         }
         compOut.close();
         
+        
     }
 
     // mixed workload: compact AVL, same range_*.txt files as OCaml benchmark
-    {/*
-        const int mixVersion = 3;
-        std::ofstream mixedOut("mixed_cpp_compact.txt");
+    {
+        const int mixVersion = 4;
+        std::ofstream mixedOut("mixed_cpp_dummy_long.txt");
         for (int i = 0; i < 11; i++) {
             int n = BALANCED_DEPTHS[i];
             std::cout << "balanced depth " << n << "...\n";
@@ -300,7 +306,6 @@ int main() {
             benchMixed(UNBALANCED_PATHS[i], n, false, 10, "worst_" + std::to_string(n), mixedOut, mixVersion);
         }
         mixedOut.close();
-        */
     }
 
     std::cout << "done! results in results_comp_cpp.txt and mixed_cpp_compact.txt\n";

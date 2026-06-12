@@ -37,34 +37,60 @@ Node* buildUnbalancedHelper(int& nextKey, int step, int depth, Node::Color color
     return root;
 }
 
-Tree* makeBalanced(int depth) {
-    auto tree = new Tree();
-    auto root = buildBalancedHelper(0, 64, depth, &tree->_nil, &tree->_nil);
-    tree->_root = root;
-    return tree;
+void makeBalanced(int depth, Tree &tree) {
+    auto root = buildBalancedHelper(0, 64, depth, &(tree._nil), nullptr);
+    tree._root = root;
 }
 
-Tree* makeUnbalanced(int depth) {
-    auto tree = new Tree();
+void makeUnbalanced(int depth, Tree &tree) {
     int nextKey = 0;
-    auto root = buildUnbalancedHelper(nextKey, 64, depth, Node::Color::Black, &tree->_nil, &tree->_nil);
-    tree->_root = root;
-    return tree;
+    auto root = buildUnbalancedHelper(nextKey, 64, depth, Node::Color::Black, &(tree._nil), nullptr);
+    tree._root = root;
 }
 
-/*
-std::vector<int> getFullDeletes(int n) {
+// write results in the same format as OCaml's plots.py data_2 dict
+// second value is memory-related: C++ uses estimated bytes per operation.
+void writeResult(const std::string& name, const std::vector<double>& times,
+                 const std::vector<double>& memory, std::ofstream& out) {
+    out << "\"" << name << "\":[";
+    for (int i = 0; i < (int)times.size(); i++) {
+        out << std::fixed << std::setprecision(9)
+            << "(" << times[i] << ", " << memory[i] << ")";
+        if (i + 1 < (int)times.size()) out << ", ";
+    }
+    out << "],\n";
+    out.flush();
+}
+
+std::vector<Cmd> parseLine(const std::string& line) {
+    std::vector<Cmd> cmds;
+    int i = 0;
+    while (i < (int)line.size()) {
+        char type = line[i++];
+        if (type != 'i' && type != 'd' && type != 'f') break;
+        bool neg = (i < (int)line.size() && line[i] == '-');
+        if (neg) i++;
+        int key = 0;
+        while (i < (int)line.size() && std::isdigit(line[i]))
+            key = key * 10 + (line[i++] - '0');
+        cmds.push_back({type, neg ? -key : key});
+    }
+    return cmds;
+}
+
+
+std::vector<long> getFullDeletes(long n) {
     std::srand(0);
-    std::vector<int> inserts;
-    std::vector<int> insertsTmp;
-    std::vector<int> deletes;
-    for (int i = 0; i < n; i++) {
-        int random_value = std::rand() % (n * 20);
+    std::vector<long> inserts;
+    std::vector<long> insertsTmp;
+    std::vector<long> deletes;
+    for (size_t i = 0; i < n; i++) {
+        long random_value = std::rand() % (n * 20);
         inserts.push_back(random_value);
         insertsTmp.push_back(random_value);
     }
-    for (int i = 0; i < insertsTmp.size(); i++) {
-        int random_value = std::rand() % insertsTmp.size();
+    for (size_t i = 0; i < insertsTmp.size(); i++) {
+        long random_value = std::rand() % insertsTmp.size();
         deletes.push_back(insertsTmp[random_value]);
         insertsTmp.erase(insertsTmp.begin() + random_value);
         if (insertsTmp.empty()) break;
@@ -72,15 +98,14 @@ std::vector<int> getFullDeletes(int n) {
     return deletes;
 }
 
-std::vector<int> getFullInserts(int n) {
+std::vector<long> getFullInserts(long n) {
     std::srand(0);
-    std::vector<int> inserts;
-    for (int i = 0; i < n; i++) {
+    std::vector<long> inserts;
+    for (size_t i = 0; i < n; i++) {
         int random_value = std::rand() % (n * 20);
         inserts.push_back(random_value);
     }
     return inserts;
 }
-    */
 
 

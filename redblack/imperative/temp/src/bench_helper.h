@@ -1,11 +1,25 @@
 #include "rbt.hpp"
+#include <cassert>
+#include <iostream>
+#include <fstream>
+#include <string>
 #include <vector>
+#include <chrono>
+#include <iomanip>
+#include <algorithm>
+#include <cctype>
+#include <set>
 
-using Tree = rbt::Tree<int32_t>;
-using Node = rbt::Node<int32_t>;
+using Tree = rbt::Tree<int64_t>;
+using Node = rbt::Node<int64_t>;
 
-Tree* makeUnbalanced(int depth);
-Tree* makeBalanced(int depth);
+void makeUnbalanced(int depth, Tree &tree);
+void makeBalanced(int depth, Tree &tree);
 
-std::vector<int> getFullInserts(int n);
-std::vector<int> getFullDeletes(int n);
+struct Cmd { char type; int key; };
+std::vector<Cmd> parseLine(const std::string& line);
+void writeResult(const std::string& name, const std::vector<double>& times,
+                 const std::vector<double>& memory, std::ofstream& out);
+
+std::vector<long> getFullInserts(long n);
+std::vector<long> getFullDeletes(long n);

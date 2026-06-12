@@ -1,3 +1,4 @@
+
 #include "rbt.hpp"
 #include "bench_helper.h"
 #include <cassert>
@@ -11,52 +12,43 @@
 #include <cctype>
 #include <set>
 
-
 double getTime() {
     auto t = std::chrono::steady_clock::now();
     return std::chrono::duration<double>(t.time_since_epoch()).count();
 }
 
-// largest key = (rightmost path in BST)
-int32_t treeMax(Node* t, Node* nil) {
-    while (t->right != nil) t = t->right;
-    return t->data;
-}
-
 std::pair<std::vector<double>, std::vector<double>> benchInsertClear(int n, int reps) {
-    Tree tree;
+    std::set<long> s;
     std::vector<long> inserts = getFullInserts(n);
     std::vector<double> times;
     std::vector<double> memory;
     for (int t = 0; t < reps; t++) {
-        Node::bytes_allocated = 0;
         auto t0 = getTime();
         for (int i = 0; i < (int)inserts.size(); i++) {
-            tree.insert(inserts[i]);
+            s.insert(inserts[i]);
         }
         times.push_back((getTime() - t0) / inserts.size());
-        memory.push_back((double) Node::bytes_allocated / inserts.size());
-        tree.free();
+        memory.push_back(0);
+        s.clear();
     }
     return {times, memory};
 }
 
 std::pair<std::vector<double>, std::vector<double>> benchDeleteClear(int n, int reps) {
-    Tree tree;
+    std::set<long> s;
     std::vector<long> inserts = getFullInserts(n);
     std::vector<long> deletes = getFullDeletes(n);
     std::vector<double> times;
     std::vector<double> memory;
     for (int t = 0; t < reps; t++) {
-        for (int i = 0; i < (int)inserts.size(); i++) tree.insert(inserts[i]);
-        Node::bytes_allocated = 0;
+        for (int i = 0; i < (int)inserts.size(); i++) s.insert(inserts[i]);
         auto t0 = getTime();
         for (int i = 0; i < (int)deletes.size(); i++) {
-            tree.remove(deletes[i]);
+            s.erase(deletes[i]);
         }
         times.push_back((getTime() - t0) / deletes.size());
-        memory.push_back((double) Node::bytes_allocated / deletes.size());
-        tree.free();
+        memory.push_back(0);
+        s.clear();
     }
     return {times, memory};
 }
@@ -64,16 +56,17 @@ std::pair<std::vector<double>, std::vector<double>> benchDeleteClear(int n, int 
 // run the mixed workload from a range_*.txt file
 // each line = one block of ~10000 commands, tree persists between blocks
 // same setup as the OCaml benchmark
-void benchMixed(const char* path, int depth, bool balanced, int reps, const std::string& label, std::ofstream& out) {
+void benchSetMixed(const char* path, int depth, int reps, const std::string& label, std::ofstream& out) {
     std::vector<double> times;
     std::vector<double> memory;
-    Tree tree;
+    std::vector<long> elems;
+    elems.resize((1 << depth) - 1);
+    for (int i = 0; i < (1 << depth) - 1; i++) {
+        elems[i] = 64 * i;
+    }
     for (int i = 0; i < reps; i++) {
-        if (balanced) makeBalanced(depth, tree);
-        else makeUnbalanced(depth, tree);
-        if (i == 0) std::cout << "Number of nodes: " << treeMax(tree._root, &(tree._nil)) / 64 << "\n";
         //validate(*tree);
-
+        std::set<long> s(elems.data(), elems.data() + elems.size());
         std::ifstream file(path);
         if (!file.is_open()) {
             std::cerr << "could not open " << path << "\n";
@@ -84,25 +77,23 @@ void benchMixed(const char* path, int depth, bool balanced, int reps, const std:
         int index = 0;
         while (std::getline(file, line)) {
             int cmdCount = 0;
-            int duplicates = 0;
             auto cmds = parseLine(line);
             //resetMem(version);
-            Node::bytes_allocated = 0;
             double t0 = getTime();
             for (auto& cmd : cmds) {
                 cmdCount++;
                 //std::cout << cmd.type << ", " << cmd.key << "\n";
-                if      (cmd.type == 'i') tree.insert(cmd.key);
-                else if (cmd.type == 'd') tree.remove(cmd.key);
-                else                      tree.find(cmd.key);
+                if      (cmd.type == 'i') s.insert(cmd.key);
+                else if (cmd.type == 'd') s.erase(cmd.key);
+                else                      s.find(cmd.key);
             }
             times.push_back((getTime() - t0) / cmdCount);
-            memory.push_back((double) Node::bytes_allocated / cmdCount);
+            memory.push_back(0);
             //memory.push_back((double) getMem(version) / cmdCount);
             //std::cout << "Duplicates: " << duplicates << "/" << cmdCount << "\n";
         }
         file.close();
-        tree.free();
+        s.clear();
     }
     writeResult(label, times, memory, out);
 }
@@ -145,7 +136,7 @@ int main() {
 
     // mixed workload: compact RBT, same range_*.txt files as OCaml benchmark
     {
-        std::ofstream compOut("amortized_cpp_opt_long.txt");
+        std::ofstream compOut("amortized_cpp_set_long.txt");
 
         std::cout << "insert amortized cost...\n";
         
@@ -162,19 +153,13 @@ int main() {
             std::cout << "  n=" << n << "\n";
         }
         compOut.close();
-        std::ofstream mixedOut("result_cpp_opt_long.txt");
+        
+        std::ofstream mixedOut("result_cpp_set_long.txt");
 
         for (int i = 0; i < 11; i++) {
             int n = BALANCED_DEPTHS[i];
             std::cout << "balanced depth " << n << "...\n";
-            benchMixed(BALANCED_PATHS[i], n, true, 10, "best_" + std::to_string(n), mixedOut);
-        }
-
-        
-        for (int i = 0; i < 7; i++) {
-            int n = UNBALANCED_DEPTHS[i];
-            std::cout << "Unbalanced depth: " << n << "...\n";
-            benchMixed(UNBALANCED_PATHS[i], n, false, 10, "worst_" + std::to_string(n), mixedOut);
+            benchSetMixed(BALANCED_PATHS[i], n, 10, "best_" + std::to_string(n), mixedOut);
         }
         
         mixedOut.close();

@@ -18,10 +18,10 @@ namespace avl {
 
 class CompactNode {
     public:
-        int key;
+        long key;
         uint64_t left;
         uint64_t right;
-        CompactNode(int key) {
+        CompactNode(long key) {
             this->key = key;
             this->left = 0;
             this->right = 0;
@@ -49,16 +49,16 @@ class AvlComp: public Avl {
             this->root = root; 
             this->height = height;
         };
-        void ins(int x);
-        void del(int x);
-        bool find(int x);
+        void ins(long x);
+        void del(long x);
+        bool find(long x);
         CompactNode* getRoot();
         bool checkInv();
         void printTree();
         void free();
 
-        int min();
-        int max();
+        long min();
+        long max();
 
     private:
         uint64_t root;

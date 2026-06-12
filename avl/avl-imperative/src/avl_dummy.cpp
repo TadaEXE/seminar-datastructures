@@ -1,18 +1,16 @@
-#include "avl_iterative.h"
+#include "avl_dummy.h"
 #include "vector"
 #include "cmath"
 #include <iostream>
 #include <assert.h>
 
-#define HEIGHT(tree) (tree != nullptr ? tree->height : 0)
-#define CALC_HEIGHT(tree) (std::max(tree->left != nullptr ? tree->left->height : 0, tree->right != nullptr ? tree->right->height : 0) + 1) 
 
 using namespace avl;
 
-Node* AvlIt::balL1(Node* current) {
+Node* AvlDum::balL1(Node* current) {
     //std::cout << HEIGHT(current) << ", " << HEIGHT(current->left) << ", " << HEIGHT(current->right) << ", " << HEIGHT(current->left->left) << ", " << HEIGHT(current->left->right) << "\n";
     Node* left = current->left;
-    int heightB = HEIGHT(left->right);
+    int heightB = left->right->height;
     current->left = left->right;
     left->right = current;
     current->height = heightB + 1;
@@ -21,7 +19,7 @@ Node* AvlIt::balL1(Node* current) {
     return left;
 }
 
-Node* AvlIt::balL2(Node* current) {
+Node* AvlDum::balL2(Node* current) {
     Node* left = current->left;
     Node* treeB = current->left->right;
     left->right = treeB->left;
@@ -34,9 +32,9 @@ Node* AvlIt::balL2(Node* current) {
     return treeB;
 }
 
-Node* AvlIt::balR1(Node* current) {
+Node* AvlDum::balR1(Node* current) {
     Node* right = current->right;
-    int heightB = HEIGHT(right->left);
+    int heightB = right->left->height;
     current->right = right->left;
     right->left = current;
     current->height = heightB + 1;
@@ -44,7 +42,7 @@ Node* AvlIt::balR1(Node* current) {
     return right;
 }
 
-Node* AvlIt::balR2(Node* current) {
+Node* AvlDum::balR2(Node* current) {
     Node* right = current->right;
     Node* treeB = current->right->left;
     right->left = treeB->right;
@@ -58,24 +56,24 @@ Node* AvlIt::balR2(Node* current) {
     return treeB;
 }
 
-bool AvlIt::balance(Node* current, Node* parent) {
-    int leftHeight = HEIGHT(current->left);
-    int rightHeight = HEIGHT(current->right);
+bool AvlDum::balance(Node* current, Node* parent) {
+    int leftHeight = current->left->height;
+    int rightHeight = current->right->height;
     //std::cout << leftHeight << ", " << rightHeight << "\n";
     Node* res = nullptr;
     //Save wether the height of the tree changed because of the rebalance
     bool changed;
-    if (leftHeight > rightHeight && HEIGHT(current->left->left) >= HEIGHT(current->left->right)) {
+    if (leftHeight > rightHeight && current->left->left->height >= current->left->right->height) {
         //if (doDebug) std::cout << "A1\n";
-        changed = HEIGHT(current->left->left) > HEIGHT(current->left->right);
+        changed = current->left->left->height > current->left->right->height;
         res = balL1(current);
     } else if (leftHeight > rightHeight) {
         //if (doDebug) std::cout << "B1\n";
         changed = true;
         res = balL2(current);
-    } else if (HEIGHT(current->right->right) >= HEIGHT(current->right->left)) {
+    } else if (current->right->right->height >= current->right->left->height) {
         //if (doDebug) std::cout << "C1\n";
-        changed = HEIGHT(current->right->right) > HEIGHT(current->right->left);
+        changed = current->right->right->height > current->right->left->height;
         res = balR1(current);
     } else {
         //if (doDebug) std::cout << "D1\n";
@@ -88,46 +86,17 @@ bool AvlIt::balance(Node* current, Node* parent) {
     return changed;
 }
 
-/*
-bool AvlVec::balance(Node* current, Node* parent) {
-    int leftHeight = HEIGHT(current->left);
-    int rightHeight = HEIGHT(current->right);
-    //std::cout << leftHeight << ", " << rightHeight << "\n";
-    Node* res = nullptr;
-    //Save wether the height of the tree changed because of the rebalance
-    bool changed;
-    if (leftHeight > rightHeight && HEIGHT(current->left->left) >= HEIGHT(current->left->right)) {
-        changed = HEIGHT(current->left->left) > HEIGHT(current->left->right);
-        res = balL1(current);
-    } else if (leftHeight > rightHeight) {
-        changed = true;
-        res = balL2(current);
-    } else if (HEIGHT(current->right->right) >= HEIGHT(current->right->left)) {
-        changed = HEIGHT(current->right->right) > HEIGHT(current->right->left);
-        res = balR1(current);
-    } else {
-        //std::cout << "D1\n";
-        changed = true;
-        res = balR2(current);
-    }
-    if (parent == nullptr) this->root = res;
-    else if (res->key < parent->key) parent->left = res; 
-    else parent->right = res; 
-    return changed;
-}
-    */
-
-void AvlIt::ins(long x) {
+void AvlDum::ins(long x) {
     std::vector<Node*> trace;
     Node* current = this->root;
-    if (current == nullptr) {
-        this->root = new Node(x);
+    if (current == nil) {
+        this->root = new Node(x, nil);
         return;
     }
     trace.resize(current->height);
     int traceSize = 0;
     //Map out the path from root to insertion spot of x
-    while (current != nullptr) {
+    while (current != nil) {
         //std::cout << current->height << ", " << traceSize << "\n";
         trace[traceSize++] = current;
         if (current->key == x) {
@@ -140,21 +109,19 @@ void AvlIt::ins(long x) {
     }
     Node* placeToInsert = trace[traceSize - 1];
     if (x < placeToInsert->key) {
-        placeToInsert->left = new Node(x);
+        placeToInsert->left = new Node(x, nil);
     } else {
-        placeToInsert->right = new Node(x);
+        placeToInsert->right = new Node(x, nil);
     }
     //Assumes height of one child has changed, 
     //returns as soon as height does not change anymore
     for (int i = traceSize - 1; i >= 0; i--) {
         current = trace[i];
-        int leftHeight = current->left != nullptr ? current->left->height : 0;
-        int rightHeight = current->right != nullptr ? current->right->height : 0;
 
-        if (leftHeight == rightHeight) {
+        if (current->left->height == current->right->height) {
             //The current node has become balanced
             return;
-        } else if (abs(leftHeight - rightHeight) == 1) {
+        } else if (abs(current->left->height - current->right->height) == 1) {
             //The current node was balanced and is now imbalanced 
             current->height++;
         } else {
@@ -165,16 +132,16 @@ void AvlIt::ins(long x) {
     }
 }
 
-void AvlIt::del(long x) {
-    if (this->root == nullptr) return;
+void AvlDum::del(long x) {
+    if (this->root == nil) return;
     std::vector<Node*> trace;
     Node* current = this->root;
-    if (current != nullptr) trace.resize(current->height);
+    if (current != nil) trace.resize(current->height);
     int traceSize = 0;
     //The node with key x. The key is replaced by the predecesor
     Node* replaced = nullptr;
     //Map out the path from root to the deleted node
-    while (current != nullptr) {
+    while (current != nil) {
         trace[traceSize++] = current;
         //The current node has key x
         if (replaced != nullptr) {
@@ -209,10 +176,10 @@ void AvlIt::del(long x) {
     
     for (int i = traceSize - 2; i >= 0; i--) {
         current = trace[i];
-        if (abs(HEIGHT(current->left) - HEIGHT(current->right)) == 1) {
+        if (abs(current->left->height - current->right->height) == 1) {
             //Height is now unbalanced, and did not change
             return;
-        } else if (HEIGHT(current->left) == HEIGHT(current->right)) {
+        } else if (current->left->height == current->right->height) {
             //Height changed and node is now balanced
             current->height --;
         } else {
@@ -223,9 +190,9 @@ void AvlIt::del(long x) {
     }
 }
 
-bool AvlIt::find(long x) {
+bool AvlDum::find(long x) {
     Node* current = root;
-    while (current != nullptr) {
+    while (current != nil) {
         if (x == current->key) return true;
         else if (x < current->key) current = current->left;
         else current = current->right;
@@ -233,27 +200,27 @@ bool AvlIt::find(long x) {
     return false;
 }
 
-bool AvlIt::checkInv() {
+bool AvlDum::checkInv() {
     return avl_inv(root);
 }
 
-Node* AvlIt::getRoot() {
+Node* AvlDum::getRoot() {
     return root;
 }
 
-void AvlIt::free() { 
+void AvlDum::free() { 
     freeTree(root);
-    this->root = nullptr; 
+    this->root = nil; 
 }
 
-long AvlIt::min() {
+long AvlDum::min() {
     Node* t = root;
-    while (t->left) t = t->left;
+    while (t->left != nil) t = t->left;
     return t->key;
 }
 
-long AvlIt::max() {
+long AvlDum::max() {
     Node* t = root;
-    while (t->right) t = t->right;
+    while (t->right != nil) t = t->right;
     return t->key;
 }

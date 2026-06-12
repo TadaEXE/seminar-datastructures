@@ -26,6 +26,21 @@ template <NodeData D> struct Node {
   Node *right = nullptr;
   D data{};
   Color color = Color::Red;
+
+  inline static long long bytes_allocated = 0;
+
+  // Count every Node allocation, then delegate to the global allocator.
+  // We don't count deallocations since we only care about the total memory used at the end of the benchmark.
+  static void* operator new(std::size_t size) {
+      bytes_allocated += static_cast<long long>(size);
+      return ::operator new(size);
+  }
+
+  // Free memory normally. We do not decrease bytes_allocated because
+  // we measure total allocations, not currently live memory.
+  static void operator delete(void* ptr) noexcept {
+      ::operator delete(ptr);
+  }
 };
 
 template <NodeData D> class Tree {
@@ -54,6 +69,7 @@ public:
 public:
   void free() {
     freeRec(_root);
+    _root = &_nil;
   }
 
   bool insert(D data) {
@@ -137,8 +153,6 @@ public:
 
       y->color = z->color;
     }
-    if (data == 921407) std::cout << "A2!!!\n";
-
     delete z;
 
     if (y_original_color == Node<D>::Color::Black) {
@@ -172,9 +186,9 @@ public:
     if (node == &_nil)
       return;
     inorder(node->left, out);
-    if (node->data == 12470) std::cout << "Start: " << node << ", " << _root << ", " << _root->left << ", " << out->data() << ", " << out->size() << "\n";
+    if (node->data == 12470) std::cout << "Start: " << node << ", " << _root << ", " << _root->left << ", " << out->data() << ", " << out->capacity() << "\n";
     out->push_back(node->data);
-    if (node->data == 12470) std::cout << "End:   " << node << ", " << _root << ", " << _root->left << ", " << out->data() << ", " << out->size() << "\n";
+    if (node->data == 12470) std::cout << "End:   " << node << ", " << _root << ", " << _root->left << ", " << out->data() << ", " << out->capacity() << "\n";
     inorder(node->right, out);
   }
 
@@ -435,7 +449,6 @@ private:
 
     destroy(node->left);
     destroy(node->right);
-
     delete node;
   }
 };

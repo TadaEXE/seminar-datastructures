@@ -22,15 +22,11 @@ public:
 
     inline static long long bytes_allocated = 0;
 
-    // Count every Node allocation, then delegate to the global allocator.
-    // We don't count deallocations since we only care about the total memory used at the end of the benchmark.
     static void* operator new(std::size_t size) {
         bytes_allocated += static_cast<long long>(size);
         return ::operator new(size);
     }
 
-    // Free memory normally. We do not decrease bytes_allocated because
-    // we measure total allocations, not currently live memory.
     static void operator delete(void* ptr) noexcept {
         ::operator delete(ptr);
     }
@@ -51,13 +47,13 @@ public:
     void baliL() {
         if (left == nullptr) return;
 
-        // Naming is according to the code in the book.
-
         // L Red and left child of L red.
         if (left->color == Red && left->left != nullptr && left->left->color == Red) {
             rbt<T>* new_left = left->left;
             rbt<T>* t3 = left->right;
             rbt<T>* t4 = right;
+
+            rbt<T>* old_left = left;
 
             T b = left->mark;
             T c = mark;
@@ -69,14 +65,19 @@ public:
             right->left = t3;
             right->right = t4;
             color = Red;
+
+            delete old_left;
             return;
         }
-        // L Red and right child of L red. 
+        // L Red and right child of L red.
         else if (left->color == Red && left->right != nullptr && left->right->color == Red) {
             rbt<T>* t1 = left->left;
             rbt<T>* t2 = left->right->left;
             rbt<T>* t3 = left->right->right;
             rbt<T>* t4 = right;
+
+            rbt<T>* old_left = left;
+            rbt<T>* old_left_right = left->right;
 
             T a = left->mark;
             T b = left->right->mark;
@@ -90,6 +91,9 @@ public:
             right->left = t3;
             right->right = t4;
             color = Red;
+
+            delete old_left;
+            delete old_left_right;
             return;
         }
         // No conflict.
@@ -101,13 +105,13 @@ public:
     void baliR() {
         if (right == nullptr) return;
 
-        // Naming is according to the code in the book.
-
         // R is Red and right child of R is Red.
         if (right->color == Red && right->right != nullptr && right->right->color == Red) {
             rbt<T>* t1 = left;
             rbt<T>* t2 = right->left;
             rbt<T>* new_right = right->right;
+
+            rbt<T>* old_right = right;
 
             T a = mark;
             T b = right->mark;
@@ -119,6 +123,8 @@ public:
             right = new_right;
             right->color = Black;
             color = Red;
+
+            delete old_right;
             return;
         }
         // R is Red and left child of R is Red.
@@ -127,6 +133,9 @@ public:
             rbt<T>* t2 = right->left->left;
             rbt<T>* t3 = right->left->right;
             rbt<T>* t4 = right->right;
+
+            rbt<T>* old_right = right;
+            rbt<T>* old_right_left = right->left;
 
             T a = mark;
             T b = right->left->mark;
@@ -140,6 +149,9 @@ public:
             right->left = t3;
             right->right = t4;
             color = Red;
+
+            delete old_right;
+            delete old_right_left;
             return;
         }
         // No conflict.
@@ -153,51 +165,40 @@ public:
     void ins(T x) {
         if (color == Black) {
             if (x < mark) {
-                // Check if child is a real tree.
                 if (left != nullptr) {
                     left->ins(x);
-                    // Balance tree after x was inserted into child.
                     baliL();
-                } 
-                // Left child is Empty.
+                }
                 else {
                     left = new rbt<T>(x, Red);
                 }
             } else if (x == mark) {
-                // Only change color.
                 color = Black;
             } else {
-                // Check if child is a real tree.
                 if (right != nullptr) {
                     right->ins(x);
-                    // Balance tree after x was inserted into child.
                     baliR();
-                } 
-                // Right child is Empty.
+                }
                 else {
                     right = new rbt<T>(x, Red);
                 }
             }
         } else {
             if (x < mark) {
-                // Check if child is a real tree.
                 if (left != nullptr) {
                     left->ins(x);
                     color = Red;
-                } 
-                // Left child is Empty.
+                }
                 else {
                     left = new rbt<T>(x, Red);
                 }
             } else if (x == mark) {
                 color = Red;
             } else {
-                // Check if child is a real tree.
                 if (right != nullptr) {
                     right->ins(x);
                     color = Red;
-                } 
-                // Right child is Empty.
+                }
                 else {
                     right = new rbt<T>(x, Red);
                 }
@@ -209,31 +210,32 @@ public:
     void baldL() {
         if (left == nullptr) return;
 
-        // Naming is according to the code in the book.
-
         // L Red.
         if (left->color == Red) {
             left->color = Black;
             color = Red;
             return;
         }
-        // R Black. 
+        // R Black.
         else if (right != nullptr && right->color == Black) {
             right->color = Red;
             baliR();
             return;
         }
         // R Red with left child Black.
-         else if (right != nullptr && right->color == Red && right->left != nullptr && right->left->color == Black) {
+        else if (right != nullptr && right->color == Red && right->left != nullptr && right->left->color == Black) {
             rbt<T>* t1 = left;
             rbt<T>* t2 = right->left->left;
             rbt<T>* t3 = right->left->right;
             rbt<T>* t4 = right->right;
 
+            rbt<T>* old_right = right;
+            rbt<T>* old_right_left = right->left;
+
             T a = mark;
             T b = right->left->mark;
             T c = right->mark;
-            
+
             mark = b;
             left = new rbt<T>(a, Black);
             left->left = t1;
@@ -246,6 +248,9 @@ public:
             }
             right->baliR();
             color = Red;
+
+            delete old_right;
+            delete old_right_left;
             return;
         }
         // No conflict.
@@ -258,26 +263,27 @@ public:
     void baldR() {
         if (right == nullptr) return;
 
-        // Naming is according to the code in the book.
-
         // R Red.
         if (right->color == Red) {
             right->color = Black;
             color = Red;
             return;
         }
-        // L Black. 
+        // L Black.
         else if (left != nullptr && left->color == Black) {
             left->color = Red;
             baliL();
             return;
         }
         // L Red with right child Black.
-         else if (left != nullptr && left->color == Red && left->right != nullptr && left->right->color == Black) {
+        else if (left != nullptr && left->color == Red && left->right != nullptr && left->right->color == Black) {
             rbt<T>* t1 = left->left;
             rbt<T>* t2 = left->right->left;
             rbt<T>* t3 = left->right->right;
             rbt<T>* t4 = right;
+
+            rbt<T>* old_left = left;
+            rbt<T>* old_left_right = left->right;
 
             T a = left->mark;
             T b = left->right->mark;
@@ -295,6 +301,9 @@ public:
             right->left = t3;
             right->right = t4;
             color = Red;
+
+            delete old_left;
+            delete old_left_right;
             return;
         }
         // No conflict.
@@ -317,6 +326,7 @@ public:
             }
         } else if (x == tree->mark) {
             rbt<T>* joined = join(tree->left, tree->right);
+            delete tree;
             return joined;
         } else {
             if (tree->right == nullptr) return nullptr;
@@ -356,6 +366,9 @@ public:
                 joined->right = new rbt<T>(c, Red);
                 joined->right->left = u3;
                 joined->right->right = t4;
+                delete t23;
+                delete lhs;
+                delete rhs;
                 return joined;
             } else {
                 rbt<T>* joined = new rbt<T>(a, Red);
@@ -363,6 +376,8 @@ public:
                 joined->right = new rbt<T>(c, Red);
                 joined->right->left = t23;
                 joined->right->right = t4;
+                delete lhs;
+                delete rhs;
                 return joined;
             }
         }
@@ -387,6 +402,9 @@ public:
                 joined->right = new rbt<T>(c, Black);
                 joined->right->left = u3;
                 joined->right->right = t4;
+                delete t23;
+                delete lhs;
+                delete rhs;
                 return joined;
             } else {
                 rbt<T>* joined = new rbt<T>(a, Black);
@@ -395,6 +413,8 @@ public:
                 joined->right->left = t23;
                 joined->right->right = t4;
                 joined->baldL();
+                delete lhs;
+                delete rhs;
                 return joined;
             }
         }
@@ -408,6 +428,7 @@ public:
             rbt<T>* joined = new rbt<T>(a, Red);
             joined->left = join(lhs, t2);
             joined->right = t3;
+            delete rhs;
             return joined;
         }
         // lhs Red.
@@ -420,6 +441,7 @@ public:
             rbt<T>* joined = new rbt<T>(a, Red);
             joined->left = t1;
             joined->right = join(t2, rhs);
+            delete lhs;
             return joined;
         }
 
@@ -448,16 +470,25 @@ public:
     }
 
     void delete_node(T x) {
-        rbt<T>* result = del(this, x);
-        if (result != nullptr) {
-            mark = result->mark;
-            left = result->left;
-            right = result->right;
-            color = Black;
-        } else {
-            empty = true;
-            left = right = nullptr;
+        if (empty) return;
+
+        if (x == mark) {
+            rbt<T>* joined = join(left, right);
+            if (joined == nullptr) {
+                empty = true;
+                left = right = nullptr;
+            } else {
+                mark = joined->mark;
+                color = Black;
+                left = joined->left;
+                right = joined->right;
+                delete joined;
+            }
+            return;
         }
+
+        del(this, x);
+        color = Black;
         return;
     }
 
@@ -475,21 +506,16 @@ public:
 
     // Claude Code:
     void print(std::string indent = "") {
-        // Print right subtree first (top of output)
         if (right != nullptr) {
             right->print(indent + "      ");
         }
-        // Print current node
-        std::cout << indent 
-                << mark 
-                << "(" << (color == Red ? "R" : "B") << ")" 
+        std::cout << indent
+                << mark
+                << "(" << (color == Red ? "R" : "B") << ")"
                 << std::endl;
-        // Print left subtree (bottom of output)
         if (left != nullptr) {
             left->print(indent + "      ");
         }
     }
     // End of Claude Code
 };
-
-

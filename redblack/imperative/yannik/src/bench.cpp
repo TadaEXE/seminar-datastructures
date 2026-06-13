@@ -110,28 +110,28 @@ void benchMixed(const char* path, int depth, bool balanced, int reps, const std:
 // same depths and files as OCaml benchmark
 const int  BALANCED_DEPTHS[] = {15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25};
 const char* BALANCED_PATHS[] = {
-    "../../../avl/avl-functional/data/range_32767.txt",
-    "../../../avl/avl-functional/data/range_65535.txt",
-    "../../../avl/avl-functional/data/range_131071.txt",
-    "../../../avl/avl-functional/data/range_262143.txt",
-    "../../../avl/avl-functional/data/range_524287.txt",
-    "../../../avl/avl-functional/data/range_1048575.txt",
-    "../../../avl/avl-functional/data/range_2097151.txt",
-    "../../../avl/avl-functional/data/range_4194303.txt",
-    "../../../avl/avl-functional/data/range_8388607.txt",
-    "../../../avl/avl-functional/data/range_16777215.txt",
-    "../../../avl/avl-functional/data/range_33554431.txt",
+    "../../../../avl/avl-functional/data/range_32767.txt",
+    "../../../../avl/avl-functional/data/range_65535.txt",
+    "../../../../avl/avl-functional/data/range_131071.txt",
+    "../../../../avl/avl-functional/data/range_262143.txt",
+    "../../../../avl/avl-functional/data/range_524287.txt",
+    "../../../../avl/avl-functional/data/range_1048575.txt",
+    "../../../../avl/avl-functional/data/range_2097151.txt",
+    "../../../../avl/avl-functional/data/range_4194303.txt",
+    "../../../../avl/avl-functional/data/range_8388607.txt",
+    "../../../../avl/avl-functional/data/range_16777215.txt",
+    "../../../../avl/avl-functional/data/range_33554431.txt",
 };
 
 const int  UNBALANCED_DEPTHS[] = {10, 11, 12, 13, 14, 15, 16};
 const char* UNBALANCED_PATHS[] = {
-"../../../avl/avl-functional/data/range_32767.txt",
-"../../../avl/avl-functional/data/range_121392.txt",
-"../../../avl/avl-functional/data/range_317810.txt",
-"../../../avl/avl-functional/data/range_1048575.txt",
-"../../../avl/avl-functional/data/range_3524577.txt",
-"../../../avl/avl-functional/data/range_9227464.txt",
-"../../../avl/avl-functional/data/range_24157816.txt"
+"../../../../avl/avl-functional/data/range_32767.txt",
+"../../../../avl/avl-functional/data/range_121392.txt",
+"../../../../avl/avl-functional/data/range_317810.txt",
+"../../../../avl/avl-functional/data/range_1048575.txt",
+"../../../../avl/avl-functional/data/range_3524577.txt",
+"../../../../avl/avl-functional/data/range_9227464.txt",
+"../../../../avl/avl-functional/data/range_24157816.txt"
 };
 
 
@@ -154,6 +154,7 @@ int main() {
             writeResult("i_amort_" + std::to_string(n * 50000), times, bytes, compOut);
             std::cout << "  n=" << n << "\n";
         }
+        
     
         std::cout << "delete amortized cost...\n";
         for (int n = 1; n <= 20; n++) {
